@@ -184,7 +184,6 @@ char * BufferP;     //バッファのデータ位置を示すポインタ
 uint8_t SDcardStatus = 0;
 FATFS drive;
 FIL file;
-//uint8_t AccessSD = 0;   //SDカード処理中=1
 uint8_t MountDone = 0;  //マウントしたら、1
 
 /*
@@ -463,7 +462,6 @@ void NormalProc() {
         if (DateTime[0] == 8) {
             //毎分、記録する
             //毎回、Mountすると、途中でSDカード抜き差ししても大丈夫なので、これで行く
-//            AccessSD = 1;
             //マウント済みでも重ねて実行して問題なかった
             if (f_mount(&drive,"0:",1) == FR_OK) {
                 //mount
@@ -482,10 +480,8 @@ void NormalProc() {
                     f_close(&file);
                 }
                 f_mount(0,"0:",0);  //unmount disk
-//            AccessSD = 0;
                 glcd_init2();
             }
-//            AccessSD = 0;
 
         }
     }
