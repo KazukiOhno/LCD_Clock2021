@@ -816,13 +816,13 @@ void drawTime(uint8_t mode, uint8_t * datetime, uint16_t color) {
     }
 }
 
-void drawDateTime(uint8_t mode) {
+void drawDateTime(uint8_t mode, uint8_t *datetime) {
     char str[100];
 
-//    sprintf(str, "20%02x/%02x/%02x(%s)", DateTime[6], DateTime[5], DateTime[4], WeekDays[DateTime[3]]);
-    sprintf(str, "20%02x/%02x/%02x(%c)", DateTime[6], DateTime[5], DateTime[4], 0x80+DateTime[3]);
+//    sprintf(str, "20%02x/%02x/%02x(%s)", datetime[6], datetime[5], datetime[4], WeekDays[datetime[3]]);
+    sprintf(str, "20%02x/%02x/%02x(%c)", datetime[6], datetime[5], datetime[4], 0x80+datetime[3]);
     display_drawChars(RDate[mode].x, RDate[mode].y, str, WHITE, BLACK, RDate[mode].font);
-    drawTime(mode, DateTime, GREEN);
+    drawTime(mode, datetime, GREEN);
 }
 
 void drawTempHumidity(uint8_t mode, int16_t temp, int16_t humidity) {

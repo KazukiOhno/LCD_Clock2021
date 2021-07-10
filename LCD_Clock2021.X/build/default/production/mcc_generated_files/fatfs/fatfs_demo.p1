@@ -1,0 +1,268 @@
+Version 3.2 HI-TECH Software Intermediate Code
+"97 mcc_generated_files/fatfs/ff.h
+[s S1 `uc 1 `uc 1 `uc 1 `uc 1 `uc 1 `us 1 `us 1 `us 1 `ul 1 `ul 1 `ul 1 `ul 1 `ul 1 `ul 1 `ul 1 `ul 1 `ul 1 `uc -> 512 `i ]
+[n S1 . fs_type pdrv n_fats wflag fsi_flag id n_rootdir csize last_clst free_clst n_fatent fsize volbase fatbase dirbase database winsect win ]
+"144
+[s S2 `*S1 1 `us 1 `uc 1 `uc 1 `ul 1 `ul 1 ]
+[n S2 . fs id attr stat sclust objsize ]
+"167
+[s S3 `S2 1 `uc 1 `uc 1 `ul 1 `ul 1 `ul 1 `ul 1 `*uc 1 ]
+[n S3 . obj flag err fptr clust sect dir_sect dir_ptr ]
+"88 mcc_generated_files/fatfs/../../mcc_generated_files/sd_spi/sd_spi.h
+[v _SD_SPI_IsMediaPresent `(uc ~T0 @X0 0 ef ]
+"39 mcc_generated_files/fatfs/fatfs_demo.c
+[c E64 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 .. ]
+[n E64 . FR_OK FR_DISK_ERR FR_INT_ERR FR_NOT_READY FR_NO_FILE FR_NO_PATH FR_INVALID_NAME FR_DENIED FR_EXIST FR_INVALID_OBJECT FR_WRITE_PROTECTED FR_INVALID_DRIVE FR_NOT_ENABLED FR_NO_FILESYSTEM FR_MKFS_ABORTED FR_TIMEOUT FR_LOCKED FR_NOT_ENOUGH_CORE FR_TOO_MANY_OPEN_FILES FR_INVALID_PARAMETER  ]
+"280 mcc_generated_files/fatfs/ff.h
+[v _f_mount `(E64 ~T0 @X0 0 ef3`*S1`*Cuc`uc ]
+"254
+[v _f_open `(E64 ~T0 @X0 0 ef3`*S3`*Cuc`uc ]
+"257
+[v _f_write `(E64 ~T0 @X0 0 ef4`*S3`*Cv`ui`*ui ]
+"255
+[v _f_close `(E64 ~T0 @X0 0 ef1`*S3 ]
+[; ;integer.h: 16: typedef int INT;
+[; ;integer.h: 17: typedef unsigned int UINT;
+[; ;integer.h: 20: typedef unsigned char BYTE;
+[; ;integer.h: 23: typedef short SHORT;
+[; ;integer.h: 24: typedef unsigned short WORD;
+[; ;integer.h: 25: typedef unsigned short WCHAR;
+[; ;integer.h: 28: typedef long LONG;
+[; ;integer.h: 29: typedef unsigned long DWORD;
+[; ;ff.h: 76: typedef char TCHAR;
+[; ;ff.h: 90: typedef DWORD FSIZE_t;
+[; ;ff.h: 97: typedef struct {
+[; ;ff.h: 98: BYTE fs_type;
+[; ;ff.h: 99: BYTE pdrv;
+[; ;ff.h: 100: BYTE n_fats;
+[; ;ff.h: 101: BYTE wflag;
+[; ;ff.h: 102: BYTE fsi_flag;
+[; ;ff.h: 103: WORD id;
+[; ;ff.h: 104: WORD n_rootdir;
+[; ;ff.h: 105: WORD csize;
+[; ;ff.h: 119: DWORD last_clst;
+[; ;ff.h: 120: DWORD free_clst;
+[; ;ff.h: 130: DWORD n_fatent;
+[; ;ff.h: 131: DWORD fsize;
+[; ;ff.h: 132: DWORD volbase;
+[; ;ff.h: 133: DWORD fatbase;
+[; ;ff.h: 134: DWORD dirbase;
+[; ;ff.h: 135: DWORD database;
+[; ;ff.h: 136: DWORD winsect;
+[; ;ff.h: 137: BYTE win[512];
+[; ;ff.h: 138: } FATFS;
+[; ;ff.h: 144: typedef struct {
+[; ;ff.h: 145: FATFS* fs;
+[; ;ff.h: 146: WORD id;
+[; ;ff.h: 147: BYTE attr;
+[; ;ff.h: 148: BYTE stat;
+[; ;ff.h: 149: DWORD sclust;
+[; ;ff.h: 150: FSIZE_t objsize;
+[; ;ff.h: 161: } FFOBJID;
+[; ;ff.h: 167: typedef struct {
+[; ;ff.h: 168: FFOBJID obj;
+[; ;ff.h: 169: BYTE flag;
+[; ;ff.h: 170: BYTE err;
+[; ;ff.h: 171: FSIZE_t fptr;
+[; ;ff.h: 172: DWORD clust;
+[; ;ff.h: 173: DWORD sect;
+[; ;ff.h: 175: DWORD dir_sect;
+[; ;ff.h: 176: BYTE* dir_ptr;
+[; ;ff.h: 184: } FIL;
+[; ;ff.h: 190: typedef struct {
+[; ;ff.h: 191: FFOBJID obj;
+[; ;ff.h: 192: DWORD dptr;
+[; ;ff.h: 193: DWORD clust;
+[; ;ff.h: 194: DWORD sect;
+[; ;ff.h: 195: BYTE* dir;
+[; ;ff.h: 196: BYTE fn[12];
+[; ;ff.h: 203: } FFDIR;
+[; ;ff.h: 209: typedef struct {
+[; ;ff.h: 210: FSIZE_t fsize;
+[; ;ff.h: 211: WORD fdate;
+[; ;ff.h: 212: WORD ftime;
+[; ;ff.h: 213: BYTE fattrib;
+[; ;ff.h: 218: TCHAR fname[12 + 1];
+[; ;ff.h: 220: } FILINFO;
+[; ;ff.h: 226: typedef enum {
+[; ;ff.h: 227: FR_OK = 0,
+[; ;ff.h: 228: FR_DISK_ERR,
+[; ;ff.h: 229: FR_INT_ERR,
+[; ;ff.h: 230: FR_NOT_READY,
+[; ;ff.h: 231: FR_NO_FILE,
+[; ;ff.h: 232: FR_NO_PATH,
+[; ;ff.h: 233: FR_INVALID_NAME,
+[; ;ff.h: 234: FR_DENIED,
+[; ;ff.h: 235: FR_EXIST,
+[; ;ff.h: 236: FR_INVALID_OBJECT,
+[; ;ff.h: 237: FR_WRITE_PROTECTED,
+[; ;ff.h: 238: FR_INVALID_DRIVE,
+[; ;ff.h: 239: FR_NOT_ENABLED,
+[; ;ff.h: 240: FR_NO_FILESYSTEM,
+[; ;ff.h: 241: FR_MKFS_ABORTED,
+[; ;ff.h: 242: FR_TIMEOUT,
+[; ;ff.h: 243: FR_LOCKED,
+[; ;ff.h: 244: FR_NOT_ENOUGH_CORE,
+[; ;ff.h: 245: FR_TOO_MANY_OPEN_FILES,
+[; ;ff.h: 246: FR_INVALID_PARAMETER
+[; ;ff.h: 247: } FRESULT;
+[; ;ff.h: 254: FRESULT f_open (FIL* fp, const TCHAR* path, BYTE mode);
+[; ;ff.h: 255: FRESULT f_close (FIL* fp);
+[; ;ff.h: 256: FRESULT f_read (FIL* fp, void* buff, UINT btr, UINT* br);
+[; ;ff.h: 257: FRESULT f_write (FIL* fp, const void* buff, UINT btw, UINT* bw);
+[; ;ff.h: 258: FRESULT f_lseek (FIL* fp, FSIZE_t ofs);
+[; ;ff.h: 259: FRESULT f_truncate (FIL* fp);
+[; ;ff.h: 260: FRESULT f_sync (FIL* fp);
+[; ;ff.h: 261: FRESULT f_opendir (FFDIR* dp, const TCHAR* path);
+[; ;ff.h: 262: FRESULT f_closedir (FFDIR* dp);
+[; ;ff.h: 263: FRESULT f_readdir (FFDIR* dp, FILINFO* fno);
+[; ;ff.h: 264: FRESULT f_findfirst (FFDIR* dp, FILINFO* fno, const TCHAR* path, const TCHAR* pattern);
+[; ;ff.h: 265: FRESULT f_findnext (FFDIR* dp, FILINFO* fno);
+[; ;ff.h: 266: FRESULT f_mkdir (const TCHAR* path);
+[; ;ff.h: 267: FRESULT f_unlink (const TCHAR* path);
+[; ;ff.h: 268: FRESULT f_rename (const TCHAR* path_old, const TCHAR* path_new);
+[; ;ff.h: 269: FRESULT f_stat (const TCHAR* path, FILINFO* fno);
+[; ;ff.h: 270: FRESULT f_chmod (const TCHAR* path, BYTE attr, BYTE mask);
+[; ;ff.h: 271: FRESULT f_utime (const TCHAR* path, const FILINFO* fno);
+[; ;ff.h: 272: FRESULT f_chdir (const TCHAR* path);
+[; ;ff.h: 273: FRESULT f_chdrive (const TCHAR* path);
+[; ;ff.h: 274: FRESULT f_getcwd (TCHAR* buff, UINT len);
+[; ;ff.h: 275: FRESULT f_getfree (const TCHAR* path, DWORD* nclst, FATFS** fatfs);
+[; ;ff.h: 276: FRESULT f_getlabel (const TCHAR* path, TCHAR* label, DWORD* vsn);
+[; ;ff.h: 277: FRESULT f_setlabel (const TCHAR* label);
+[; ;ff.h: 278: FRESULT f_forward (FIL* fp, UINT(*func)(const BYTE*,UINT), UINT btf, UINT* bf);
+[; ;ff.h: 279: FRESULT f_expand (FIL* fp, FSIZE_t szf, BYTE opt);
+[; ;ff.h: 280: FRESULT f_mount (FATFS* fs, const TCHAR* path, BYTE opt);
+[; ;ff.h: 281: FRESULT f_mkfs (const TCHAR* path, BYTE opt, DWORD au, void* work, UINT len);
+[; ;ff.h: 282: FRESULT f_fdisk (BYTE pdrv, const DWORD* szt, void* work);
+[; ;ff.h: 283: FRESULT f_setcp (WORD cp);
+[; ;ff.h: 284: int f_putc (TCHAR c, FIL* fp);
+[; ;ff.h: 285: int f_puts (const TCHAR* str, FIL* cp);
+[; ;ff.h: 286: int f_printf (FIL* fp, const TCHAR* str, ...);
+[; ;ff.h: 287: TCHAR* f_gets (TCHAR* buff, int len, FIL* fp);
+[; ;ff.h: 310: DWORD get_fattime (void);
+[; ;stdint.h: 13: typedef signed char int8_t;
+[; ;stdint.h: 20: typedef signed int int16_t;
+[; ;stdint.h: 28: typedef __int24 int24_t;
+[; ;stdint.h: 36: typedef signed long int int32_t;
+[; ;stdint.h: 52: typedef unsigned char uint8_t;
+[; ;stdint.h: 58: typedef unsigned int uint16_t;
+[; ;stdint.h: 65: typedef __uint24 uint24_t;
+[; ;stdint.h: 72: typedef unsigned long int uint32_t;
+[; ;stdint.h: 88: typedef signed char int_least8_t;
+[; ;stdint.h: 96: typedef signed int int_least16_t;
+[; ;stdint.h: 109: typedef __int24 int_least24_t;
+[; ;stdint.h: 118: typedef signed long int int_least32_t;
+[; ;stdint.h: 136: typedef unsigned char uint_least8_t;
+[; ;stdint.h: 143: typedef unsigned int uint_least16_t;
+[; ;stdint.h: 154: typedef __uint24 uint_least24_t;
+[; ;stdint.h: 162: typedef unsigned long int uint_least32_t;
+[; ;stdint.h: 181: typedef signed char int_fast8_t;
+[; ;stdint.h: 188: typedef signed int int_fast16_t;
+[; ;stdint.h: 200: typedef __int24 int_fast24_t;
+[; ;stdint.h: 208: typedef signed long int int_fast32_t;
+[; ;stdint.h: 224: typedef unsigned char uint_fast8_t;
+[; ;stdint.h: 230: typedef unsigned int uint_fast16_t;
+[; ;stdint.h: 240: typedef __uint24 uint_fast24_t;
+[; ;stdint.h: 247: typedef unsigned long int uint_fast32_t;
+[; ;stdint.h: 268: typedef int32_t intmax_t;
+[; ;stdint.h: 282: typedef uint32_t uintmax_t;
+[; ;stdint.h: 289: typedef int16_t intptr_t;
+[; ;stdint.h: 294: typedef uint16_t uintptr_t;
+[; ;stdbool.h: 15: typedef unsigned char bool;
+[; ;sd_spi.h: 86: bool SD_SPI_IsMediaInitialized(void);
+[; ;sd_spi.h: 87: bool SD_SPI_MediaInitialize(void);
+[; ;sd_spi.h: 88: bool SD_SPI_IsMediaPresent(void);
+[; ;sd_spi.h: 89: bool SD_SPI_IsWriteProtected(void);
+[; ;sd_spi.h: 90: uint16_t SD_SPI_GetSectorSize(void);
+[; ;sd_spi.h: 91: uint32_t SD_SPI_GetSectorCount(void);
+[; ;sd_spi.h: 123: bool SD_SPI_SectorRead(uint32_t sector_address, uint8_t* buffer, uint16_t sector_count);
+[; ;sd_spi.h: 154: bool SD_SPI_SectorWrite(uint32_t sector_address, const uint8_t* buffer, uint16_t sector_count);
+"27 mcc_generated_files/fatfs/fatfs_demo.c
+[v _drive `S1 ~T0 @X0 1 s ]
+[; ;fatfs_demo.c: 27: static FATFS drive;
+"28
+[v _file `S3 ~T0 @X0 1 s ]
+[; ;fatfs_demo.c: 28: static FIL file;
+"30
+[v _FatFsDemo_Tasks `(v ~T0 @X0 1 ef ]
+"31
+{
+[; ;fatfs_demo.c: 30: void FatFsDemo_Tasks(void)
+[; ;fatfs_demo.c: 31: {
+[e :U _FatFsDemo_Tasks ]
+[f ]
+"32
+[v _actualLength `ui ~T0 @X0 1 a ]
+[v F257 `uc ~T0 @X0 -> 0 `x s ]
+[i F257
+:U ..
+-> 72 `c
+-> 101 `c
+-> 108 `c
+-> 108 `c
+-> 111 `c
+-> 32 `c
+-> 87 `c
+-> 111 `c
+-> 114 `c
+-> 108 `c
+-> 100 `c
+-> 33 `c
+-> 0 `c
+..
+]
+"33
+[v _data `uc ~T0 @X0 13  a ]
+[; ;fatfs_demo.c: 32: UINT actualLength;
+[; ;fatfs_demo.c: 33: char data[] = "Hello World!";
+[e = _data F257 ]
+[; ;fatfs_demo.c: 34: if( SD_SPI_IsMediaPresent() == 0)
+"34
+[e $ ! == -> ( _SD_SPI_IsMediaPresent ..  `i -> 0 `i 7  ]
+[; ;fatfs_demo.c: 35: {
+"35
+{
+[; ;fatfs_demo.c: 36: return;
+"36
+[e $UE 6  ]
+"37
+}
+[e :U 7 ]
+[; ;fatfs_demo.c: 37: }
+[; ;fatfs_demo.c: 39: if (f_mount(&drive,"0:",1) == FR_OK)
+"39
+[e $ ! == -> ( _f_mount (3 , , &U _drive :s 1C -> -> 1 `i `uc `i -> . `E64 0 `i 8  ]
+[; ;fatfs_demo.c: 40: {
+"40
+{
+[; ;fatfs_demo.c: 41: if (f_open(&file, "HELLO.TXT", 0x02 | 0x04 ) == FR_OK)
+"41
+[e $ ! == -> ( _f_open (3 , , &U _file :s 2C -> | -> 2 `i -> 4 `i `uc `i -> . `E64 0 `i 9  ]
+[; ;fatfs_demo.c: 42: {
+"42
+{
+[; ;fatfs_demo.c: 43: f_write(&file, data, sizeof(data)-1, &actualLength );
+"43
+[e ( _f_write (4 , , , &U _file -> &U _data `*Cv - -> # _data `ui -> -> 1 `i `ui &U _actualLength ]
+[; ;fatfs_demo.c: 44: f_close(&file);
+"44
+[e ( _f_close (1 &U _file ]
+"45
+}
+[e :U 9 ]
+[; ;fatfs_demo.c: 45: }
+[; ;fatfs_demo.c: 47: f_mount(0,"0:",0);
+"47
+[e ( _f_mount (3 , , -> -> 0 `i `*S1 :s 3C -> -> 0 `i `uc ]
+"48
+}
+[e :U 8 ]
+[; ;fatfs_demo.c: 48: }
+[; ;fatfs_demo.c: 49: }
+"49
+[e :UE 6 ]
+}
+[a 2C 72 69 76 76 79 46 84 88 84 0 ]
+[a 1C 48 58 0 ]
+[a 3C 48 58 0 ]

@@ -60,19 +60,19 @@
  *     LCD_BL P1A(I) RC2    RC5 (O) SDO1
  *     SCK1      (O) RC3    RC4 (I) SDI1
  * 
- * TMR0: アラーム音のなっている時間を測定 10ms
- * TMR1: ロータリーエンコーダのサンプリング　100us
- * TMR2: 圧電スピーカ用4KHzのECCP2 PWMを発生させるためのタイマ  250us
+ * TMR0: アラーム音の鳴っている時間を測定 10ms毎の割込み
+ * TMR1: ロータリーエンコーダのサンプリング　100us毎の割込み
+ * TMR2: 圧電スピーカ用に4KHzのECCP2 PWMを発生させるためのタイマ  250us
  * TMR3: ADCをCCP5モードで使用して、TMR3=4msを利用
  * TMR5: タッチ、スライドSW、GPSの状態チェックの割り込み用タイマ　10ms
  * TMR6: バックライトのPWM制御用タイマ 256us
  * 
- * SPIインタフェース：LCDとタッチとSDカードで共用
+ * SPIインタフェース：LCD、タッチ、SDカードの3つで共用
  * 　MSSP1=SPI (SCK1, SDI1, SDO1)+LCD_CS, T_CS, SDCard_CS
  *   　LCD_RESET, LCD_DCRS、T_IRQ
- *   LCDとは最大スピードの8MHz、タッチは2MHzで通信、SDカードは、低速400kHz、高速2MHz
- * SPIMASTERは、開いた時デフォルトで、SDFAT=8MHzになっているので、修正しておかないと、
- * Generateした後動かないと騒ぐことになる。
+ *   LCDとは最大スピードの8MHz、タッチは2MHzで通信、SDカードは、低速400kHz、高速8MHz
+ * SPIMASTERは、開いた時デフォルトで、MODE3になるので、MODE0に変更要
+ * 修正しておかないと、Generateした後動かないと騒ぐことになる
  * 
  * 照度センサ(PhotoDiode)は、アナログで電圧取り込み RA3=AN3=CCP5=PhotoDiode
  * LCDのバックライトはPWM制御を使って明るさ調整
@@ -89,7 +89,7 @@
  * 　　RC0=ROT_B, RC1=ROT_A
  * 
  * アラームOn/Off用SW　　RA7=ALMSW
- * 圧電スピーカ: ECCP2=PWM (Timer2)　P2A=RB3　　　MCC開き直すと、P2Aが設定から消えてしまうので、注意
+ * 圧電スピーカ: ECCP2=PWM (Timer2)　P2A=RB3　　　MCC開き直すと、P2Aが設定から消えてしまうので注意
  * GPSとのシリアル通信: RX1のみで非同期通信(EUSART1)　9600bps, 8bit, parityなし、Stop1bit
  * GPSの1PPS: SWと同様に10ms毎にチェックのする処理で、RB5から取り込む
  * 
@@ -103,6 +103,7 @@
  * GPSv21: サポートルーチンの定義を整理(何をGlobal変数にして、どの関数を共用化するか)
  * GPSv22: ボタンオブジェクトの定義を使いやすいように再定義
  * GPS4: SDカード書き込み時の問題解消。LCDをSleep_Outさせて解決
+ * LCD_Clock2021に名称変更: GitHubにupload。
  * 
  */
      
@@ -155,6 +156,9 @@ uint8_t UpdateFlag = 0;
 #define UpdateMsg           0x80
 
 uint8_t TouchCount;
+uint16_t TouchX, TouchY;
+uint16_t Test_x, Test_y;
+
 int8_t RotCount = 0; //回してクリックした回数
 int8_t Accel = 1;   //高速回転させた時に、倍速等
 
@@ -293,7 +297,9 @@ void RTC_handler() {
 void AlarmWHandler() {
     if (RTC_INTB_GetValue()==0) {
         //状態変化割り込みのため、0になった時だけフラグ立てる
-        UpdateFlag |= UpdateAlarmW;
+//        UpdateFlag |= UpdateAlarmW;
+        AlarmSoundOn(0);
+        AlarmStatus = 1;
     }
 }
 
@@ -386,16 +392,7 @@ void NormalProc() {
     int16_t delta;
     int8_t mm, hh, jj;
     UINT actualLength;
-//    uint16_t newBL;
-
-    if (UpdateFlag & UpdateAlarmW) {
-        //アラーム時刻になった
-        AlarmSoundOn(0);
-        AlarmStatus = 1;
-        RTC_resetAlarm();   //1分経過したらなぜか音が止まってしまったのでこれを追加してみる
-        
-        UpdateFlag &= ~UpdateAlarmW; //UpdateAlarmWをクリア
-    }
+    uint16_t newBL;
 
     if (Mode == NormalInit) {
         lcd_fill(BLACK);
@@ -411,7 +408,7 @@ void NormalProc() {
         //日付、時刻の更新
         RTC_read(DateTime);
 
-        drawDateTime(DisplayMode);
+        drawDateTime(DisplayMode, DateTime);
 
         resetCTFG();
         EXT_INT0_InterruptFlagClear();
@@ -419,7 +416,7 @@ void NormalProc() {
         UpdateFlag &= ~UpdateTime; //UpdateTimeをクリア
         
         if ((DateTime[0] & 0x0f)==1) {
-            //5秒ごとに更新するように変更
+            //10秒ごとに更新するように変更
             //照度センサで、明るさを1秒ごとに取得する
             //ADCの結果は、10bitの0-1023。明るいと大きな数値
             //ただし、暗いとADCの結果がかなりばらつく
@@ -429,24 +426,18 @@ void NormalProc() {
             Brightness = Brightness/8*7 + ADC_GetConversion(PhotoDiode);
             // Dutyを変更してバックライトの明るさを変更
             // Brightnessが一定数以上の時は、バックライトはほぼ常時点灯。
-            if (Brightness/8 > 300) {
-                //            newBL = 1000;
-                BackLight = 1000;
-            }
-            else {
-                // それよりBrightness小さくなると、0で100に向けて小さくする
-                BackLight = 100 + Brightness/8*3;
-                //            newBL = 100 + Brightness/8*3;
-            }
+            newBL = 100 + Brightness/8*3;
+            // BackLightは、最低100-max1000
+            if (newBL > 1000) newBL = 1000;
             //変化が50以上起こらないように調整
-            //        if (BackLight-newBL > 50) BackLight = BackLight -50;
-            //        else if (BackLight-newBL < -50) BackLight = BackLight +50;
-            //        else BackLight = newBL;
+            if (BackLight > newBL+10) BackLight = BackLight -10;
+            else if (BackLight < newBL-10) BackLight = BackLight +10;
+            else BackLight = newBL;
             
             //輝度のレベルを表示 (デバッグ用)
             //        sprintf(str, "B=%4d", Brightness);
-            ////        sprintf(str, "B=%4d", BackLight);
-            //        display_drawChars(180, 20, str, WHITE, BLACK, 1);
+//            sprintf(str, "B=%x", BackLight);
+//            display_drawChars(180, 20, str, WHITE, BLACK, 1);
             //PWMは、10ビット (TMR6の周期=PR6=0xffに設定した時)
             EPWM1_LoadDutyValue(BackLight);
         }
@@ -462,21 +453,17 @@ void NormalProc() {
         if (DateTime[0] == 8) {
             //毎分、記録する
             //毎回、Mountすると、途中でSDカード抜き差ししても大丈夫なので、これで行く
-            //マウント済みでも重ねて実行して問題なかった
+            //画面が白くなる現象は、f_writeした後、f_close時に発生
             if (f_mount(&drive,"0:",1) == FR_OK) {
-                //mount
                 if (f_open(&file, "TempLog.TXT", FA_WRITE | FA_OPEN_APPEND ) == FR_OK) { //Open or Create 追記
-////                    f_lseek(&file, 0);
-////                    f_read(&file, str, 80, &actualLength);
-////                    str[actualLength] = '\0';
-////                    display_drawChars(0, 180, str, WHITE, BLACK, 1);
-//                    //日付時刻と気温を記録
+//                    f_lseek(&file, 0);
+//                    f_read(&file, str, 80, &actualLength);
+//                    str[actualLength] = '\0';
+//                    display_drawChars(0, 180, str, WHITE, BLACK, 1);
+                    //日付時刻と気温を記録
                     sprintf(str, "%x/%x/%x %02x:%02x %d\r\n", DateTime[6], DateTime[5], DateTime[4], DateTime[2], DateTime[1], Temp);
                     f_write(&file, str, strlen(str), &actualLength);
-////                    AlarmSoundOn(0);
-////                    __delay_ms(200);
-////                    AlarmSoundOff();
-////                    f_sync(&file);
+//                    f_sync(&file);
                     f_close(&file);
                 }
                 f_mount(0,"0:",0);  //unmount disk
@@ -508,14 +495,13 @@ void NormalProc() {
         if (AlarmStatus == 1) {
             AlarmSoundOff();
             AlarmStatus = 0;    //アラーム止めたら0に
-//            RTC_resetAlarm();
+            RTC_resetAlarm();
             SmoothCount++;
             if (SmoothCount <= 12) {
                 //5分後にアラーム再設定　12回まで、1時間後まで
                 mm = Bcd2Hex(AlarmTime[0]);
                 hh = Bcd2Hex(AlarmTime[1]);
                 IncDecTime(SmoothCount*5, &hh, &mm);    //5分*Smooth回数の時刻に設定
-//IncDecTime(SmoothCount*2, &hh, &mm);    //デバッグ用2分*Smooth回数の時刻に設定
                 SmoothAlarmTime[0] = Hex2Bcd(mm);
                 SmoothAlarmTime[1] = Hex2Bcd(hh);
 
@@ -523,14 +509,14 @@ void NormalProc() {
                 RTC_setAlarmTime(SmoothAlarmTime);
                 
             } else {
-                //オリジナルのアラーム時刻をセットし直す
+                //スヌーズ終了
+                SmoothCount = 0;
+                //オリジナルのアラーム時刻をセットし直す(翌日用)
                 RTC_setAlarmTime(AlarmTime);
-                AlarmStatus = 0;    //スヌーズ終了
             }
         }
         // カレンダー部をタッチしたら、表示モードを変更
         if (ButtonPush(Test_x, Test_y, BtnCalendar)) {
-//        if (Test_y > RThisMonthCalendar[DisplayMode].y) {
             DisplayMode = (DisplayMode +1) % 3;
             DATAEE_WriteByte(AddressDisplayMode, DisplayMode);  //変更したら書込む
             FirstDraw = 1;
@@ -1103,7 +1089,6 @@ void main(void) {
     //原因は、よくわからないが、SYSTEM_Initialize時、IOCBが有効化され、空のハンドラの状態だと、なぜか
     //ハングする。ここInterruptEnableの前にしないとハングする。それがわからず相当悩んだ
     //IOCB4=0にするか、ハンドラ設定(中身がないとデフォルトと同じくダメ)をする必要あり
-//    IOCBbits.IOCB4 = 0;
     IOCB4_SetInterruptHandler(AlarmWHandler); //アラーム Alarm Wの割り込み
 
     // ロータリー用TMR1の割り込み
@@ -1241,7 +1226,7 @@ void main(void) {
         return;
     }
  */
-    //2021/6/19 この状態では、割り込みを禁止する必要もないし、IOCB4=0も不要でOpenまで問題なし
+    //2021/6/19 この状態では、割り込みを禁止する必要もない
     //f_writeを実行すると、画面が真っ白になる
     //f_writeせずに、Closeしても、画面が真っ白に
     //結局、SDカードへの書き込み自体は問題なくできるので、SDカード関係の処理は、そのまま

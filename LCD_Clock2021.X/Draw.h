@@ -22,7 +22,7 @@ void Draw3month(uint8_t startyear, uint8_t startmonth, uint8_t mode);
 
 void drawAlarmTime(uint8_t mode, uint8_t *alarmtime);
 void drawTime(uint8_t mode, uint8_t * datetime, uint16_t color);
-void drawDateTime(uint8_t mode);
+void drawDateTime(uint8_t mode, uint8_t *datetime);
 void drawTempHumidity(uint8_t mode, int16_t temp, int16_t humidity);
 void drawCalendar(uint8_t mode);
 

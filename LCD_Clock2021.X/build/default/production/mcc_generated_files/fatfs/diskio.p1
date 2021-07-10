@@ -1,0 +1,479 @@
+Version 3.2 HI-TECH Software Intermediate Code
+"88 mcc_generated_files/fatfs/../../mcc_generated_files/sd_spi/sd_spi.h
+[v _SD_SPI_IsMediaPresent `(uc ~T0 @X0 0 ef ]
+"86
+[v _SD_SPI_IsMediaInitialized `(uc ~T0 @X0 0 ef ]
+"89
+[v _SD_SPI_IsWriteProtected `(uc ~T0 @X0 0 ef ]
+"29 mcc_generated_files/fatfs/diskio.c
+[c E84 0 .. ]
+[n E84 DRIVER_LIST DRVA  ]
+"87 mcc_generated_files/fatfs/../../mcc_generated_files/sd_spi/sd_spi.h
+[v _SD_SPI_MediaInitialize `(uc ~T0 @X0 0 ef ]
+"70 mcc_generated_files/fatfs/diskio.c
+[c E10 0 1 2 3 4 .. ]
+[n E10 . RES_OK RES_ERROR RES_WRPRT RES_NOTRDY RES_PARERR  ]
+"123 mcc_generated_files/fatfs/../../mcc_generated_files/sd_spi/sd_spi.h
+[v _SD_SPI_SectorRead `(uc ~T0 @X0 0 ef3`ul`*uc`ui ]
+"154
+[v _SD_SPI_SectorWrite `(uc ~T0 @X0 0 ef3`ul`*Cuc`ui ]
+[; ;integer.h: 16: typedef int INT;
+[; ;integer.h: 17: typedef unsigned int UINT;
+[; ;integer.h: 20: typedef unsigned char BYTE;
+[; ;integer.h: 23: typedef short SHORT;
+[; ;integer.h: 24: typedef unsigned short WORD;
+[; ;integer.h: 25: typedef unsigned short WCHAR;
+[; ;integer.h: 28: typedef long LONG;
+[; ;integer.h: 29: typedef unsigned long DWORD;
+[; ;diskio.h: 16: typedef BYTE DSTATUS;
+[; ;diskio.h: 19: typedef enum {
+[; ;diskio.h: 20: RES_OK = 0,
+[; ;diskio.h: 21: RES_ERROR,
+[; ;diskio.h: 22: RES_WRPRT,
+[; ;diskio.h: 23: RES_NOTRDY,
+[; ;diskio.h: 24: RES_PARERR
+[; ;diskio.h: 25: } DRESULT;
+[; ;diskio.h: 32: DSTATUS disk_initialize (BYTE pdrv);
+[; ;diskio.h: 33: DSTATUS disk_status (BYTE pdrv);
+[; ;diskio.h: 34: DRESULT disk_read (BYTE pdrv, BYTE* buff, DWORD sector, UINT count);
+[; ;diskio.h: 35: DRESULT disk_write (BYTE pdrv, const BYTE* buff, DWORD sector, UINT count);
+[; ;diskio.h: 36: DRESULT disk_ioctl (BYTE pdrv, BYTE cmd, void* buff);
+[; ;stdint.h: 13: typedef signed char int8_t;
+[; ;stdint.h: 20: typedef signed int int16_t;
+[; ;stdint.h: 28: typedef __int24 int24_t;
+[; ;stdint.h: 36: typedef signed long int int32_t;
+[; ;stdint.h: 52: typedef unsigned char uint8_t;
+[; ;stdint.h: 58: typedef unsigned int uint16_t;
+[; ;stdint.h: 65: typedef __uint24 uint24_t;
+[; ;stdint.h: 72: typedef unsigned long int uint32_t;
+[; ;stdint.h: 88: typedef signed char int_least8_t;
+[; ;stdint.h: 96: typedef signed int int_least16_t;
+[; ;stdint.h: 109: typedef __int24 int_least24_t;
+[; ;stdint.h: 118: typedef signed long int int_least32_t;
+[; ;stdint.h: 136: typedef unsigned char uint_least8_t;
+[; ;stdint.h: 143: typedef unsigned int uint_least16_t;
+[; ;stdint.h: 154: typedef __uint24 uint_least24_t;
+[; ;stdint.h: 162: typedef unsigned long int uint_least32_t;
+[; ;stdint.h: 181: typedef signed char int_fast8_t;
+[; ;stdint.h: 188: typedef signed int int_fast16_t;
+[; ;stdint.h: 200: typedef __int24 int_fast24_t;
+[; ;stdint.h: 208: typedef signed long int int_fast32_t;
+[; ;stdint.h: 224: typedef unsigned char uint_fast8_t;
+[; ;stdint.h: 230: typedef unsigned int uint_fast16_t;
+[; ;stdint.h: 240: typedef __uint24 uint_fast24_t;
+[; ;stdint.h: 247: typedef unsigned long int uint_fast32_t;
+[; ;stdint.h: 268: typedef int32_t intmax_t;
+[; ;stdint.h: 282: typedef uint32_t uintmax_t;
+[; ;stdint.h: 289: typedef int16_t intptr_t;
+[; ;stdint.h: 294: typedef uint16_t uintptr_t;
+[; ;stdbool.h: 15: typedef unsigned char bool;
+[; ;sd_spi.h: 86: bool SD_SPI_IsMediaInitialized(void);
+[; ;sd_spi.h: 87: bool SD_SPI_MediaInitialize(void);
+[; ;sd_spi.h: 88: bool SD_SPI_IsMediaPresent(void);
+[; ;sd_spi.h: 89: bool SD_SPI_IsWriteProtected(void);
+[; ;sd_spi.h: 90: uint16_t SD_SPI_GetSectorSize(void);
+[; ;sd_spi.h: 91: uint32_t SD_SPI_GetSectorCount(void);
+[; ;sd_spi.h: 123: bool SD_SPI_SectorRead(uint32_t sector_address, uint8_t* buffer, uint16_t sector_count);
+[; ;sd_spi.h: 154: bool SD_SPI_SectorWrite(uint32_t sector_address, const uint8_t* buffer, uint16_t sector_count);
+[; ;diskio.c: 15: enum DRIVER_LIST{
+[; ;diskio.c: 16: DRVA = 0,
+[; ;diskio.c: 17: };
+"23 mcc_generated_files/fatfs/diskio.c
+[v _disk_status `(uc ~T0 @X0 1 ef1`uc ]
+"26
+{
+[; ;diskio.c: 23: DSTATUS disk_status (
+[; ;diskio.c: 24: BYTE pdrv
+[; ;diskio.c: 25: )
+[; ;diskio.c: 26: {
+[e :U _disk_status ]
+"24
+[v _pdrv `uc ~T0 @X0 1 r1 ]
+"26
+[f ]
+"27
+[v _stat `uc ~T0 @X0 1 a ]
+[; ;diskio.c: 27: DSTATUS stat = 0x01;
+[e = _stat -> -> 1 `i `uc ]
+[; ;diskio.c: 29: switch (pdrv) {
+"29
+[e $U 3  ]
+{
+[; ;diskio.c: 31: case DRVA:
+"31
+[e :U 4 ]
+[; ;diskio.c: 32: if ( SD_SPI_IsMediaPresent() == 0)
+"32
+[e $ ! == -> ( _SD_SPI_IsMediaPresent ..  `i -> 0 `i 5  ]
+[; ;diskio.c: 33: {
+"33
+{
+[; ;diskio.c: 34: stat = 0x02;
+"34
+[e = _stat -> -> 2 `i `uc ]
+"35
+}
+[; ;diskio.c: 35: }
+[e $U 6  ]
+"36
+[e :U 5 ]
+[; ;diskio.c: 36: else if ( SD_SPI_IsMediaInitialized() == 1)
+[e $ ! == -> ( _SD_SPI_IsMediaInitialized ..  `i -> 1 `i 7  ]
+[; ;diskio.c: 37: {
+"37
+{
+[; ;diskio.c: 38: stat &= ~0x01;
+"38
+[e =& _stat -> ~ -> 1 `i `uc ]
+"39
+}
+[e :U 7 ]
+"41
+[e :U 6 ]
+[; ;diskio.c: 39: }
+[; ;diskio.c: 41: if ( SD_SPI_IsWriteProtected() == 1)
+[e $ ! == -> ( _SD_SPI_IsWriteProtected ..  `i -> 1 `i 8  ]
+[; ;diskio.c: 42: {
+"42
+{
+[; ;diskio.c: 43: stat |= 0x04;
+"43
+[e =| _stat -> -> 4 `i `uc ]
+"44
+}
+[e :U 8 ]
+[; ;diskio.c: 44: }
+[; ;diskio.c: 46: break;
+"46
+[e $U 2  ]
+[; ;diskio.c: 48: default:
+"48
+[e :U 9 ]
+[; ;diskio.c: 49: break;
+"49
+[e $U 2  ]
+"50
+}
+[; ;diskio.c: 50: }
+[e $U 2  ]
+"29
+[e :U 3 ]
+[e [\ _pdrv , $ -> . `E84 0 `uc 4
+ 9 ]
+"50
+[e :U 2 ]
+[; ;diskio.c: 51: return stat;
+"51
+[e ) _stat ]
+[e $UE 1  ]
+[; ;diskio.c: 52: }
+"52
+[e :UE 1 ]
+}
+"60
+[v _disk_initialize `(uc ~T0 @X0 1 ef1`uc ]
+"63
+{
+[; ;diskio.c: 60: DSTATUS disk_initialize (
+[; ;diskio.c: 61: BYTE pdrv
+[; ;diskio.c: 62: )
+[; ;diskio.c: 63: {
+[e :U _disk_initialize ]
+"61
+[v _pdrv `uc ~T0 @X0 1 r1 ]
+"63
+[f ]
+"64
+[v _stat `uc ~T0 @X0 1 a ]
+[; ;diskio.c: 64: DSTATUS stat = 0x01;
+[e = _stat -> -> 1 `i `uc ]
+[; ;diskio.c: 66: switch (pdrv) {
+"66
+[e $U 12  ]
+{
+[; ;diskio.c: 67: case DRVA :
+"67
+[e :U 13 ]
+[; ;diskio.c: 68: if(SD_SPI_MediaInitialize() == 1)
+"68
+[e $ ! == -> ( _SD_SPI_MediaInitialize ..  `i -> 1 `i 14  ]
+[; ;diskio.c: 69: {
+"69
+{
+[; ;diskio.c: 70: stat = RES_OK;
+"70
+[e = _stat -> . `E10 0 `uc ]
+"71
+}
+[; ;diskio.c: 71: }
+[e $U 15  ]
+"72
+[e :U 14 ]
+[; ;diskio.c: 72: else
+[; ;diskio.c: 73: {
+"73
+{
+[; ;diskio.c: 74: stat = RES_ERROR;
+"74
+[e = _stat -> . `E10 1 `uc ]
+"75
+}
+[e :U 15 ]
+[; ;diskio.c: 75: }
+[; ;diskio.c: 76: break;
+"76
+[e $U 11  ]
+[; ;diskio.c: 77: default:
+"77
+[e :U 16 ]
+[; ;diskio.c: 78: break;
+"78
+[e $U 11  ]
+"79
+}
+[; ;diskio.c: 79: }
+[e $U 11  ]
+"66
+[e :U 12 ]
+[e [\ _pdrv , $ -> . `E84 0 `uc 13
+ 16 ]
+"79
+[e :U 11 ]
+[; ;diskio.c: 81: return stat;
+"81
+[e ) _stat ]
+[e $UE 10  ]
+[; ;diskio.c: 82: }
+"82
+[e :UE 10 ]
+}
+"90
+[v _disk_read `(E10 ~T0 @X0 1 ef4`uc`*uc`ul`ui ]
+"96
+{
+[; ;diskio.c: 90: DRESULT disk_read (
+[; ;diskio.c: 91: BYTE pdrv,
+[; ;diskio.c: 92: BYTE *buff,
+[; ;diskio.c: 93: DWORD sector,
+[; ;diskio.c: 94: UINT count
+[; ;diskio.c: 95: )
+[; ;diskio.c: 96: {
+[e :U _disk_read ]
+"91
+[v _pdrv `uc ~T0 @X0 1 r1 ]
+"92
+[v _buff `*uc ~T0 @X0 1 r2 ]
+"93
+[v _sector `ul ~T0 @X0 1 r3 ]
+"94
+[v _count `ui ~T0 @X0 1 r4 ]
+"96
+[f ]
+"97
+[v _res `E10 ~T0 @X0 1 a ]
+[; ;diskio.c: 97: DRESULT res = RES_PARERR;
+[e = _res . `E10 4 ]
+[; ;diskio.c: 99: switch (pdrv) {
+"99
+[e $U 19  ]
+{
+[; ;diskio.c: 100: case DRVA :
+"100
+[e :U 20 ]
+[; ;diskio.c: 101: if(SD_SPI_SectorRead(sector, buff, count) == 1)
+"101
+[e $ ! == -> ( _SD_SPI_SectorRead (3 , , _sector _buff _count `i -> 1 `i 21  ]
+[; ;diskio.c: 102: {
+"102
+{
+[; ;diskio.c: 103: res = RES_OK;
+"103
+[e = _res . `E10 0 ]
+"104
+}
+[; ;diskio.c: 104: }
+[e $U 22  ]
+"105
+[e :U 21 ]
+[; ;diskio.c: 105: else
+[; ;diskio.c: 106: {
+"106
+{
+[; ;diskio.c: 107: res = RES_ERROR;
+"107
+[e = _res . `E10 1 ]
+"108
+}
+[e :U 22 ]
+[; ;diskio.c: 108: }
+[; ;diskio.c: 109: break;
+"109
+[e $U 18  ]
+[; ;diskio.c: 111: default:
+"111
+[e :U 23 ]
+[; ;diskio.c: 112: break;
+"112
+[e $U 18  ]
+"113
+}
+[; ;diskio.c: 113: }
+[e $U 18  ]
+"99
+[e :U 19 ]
+[e [\ _pdrv , $ -> . `E84 0 `uc 20
+ 23 ]
+"113
+[e :U 18 ]
+[; ;diskio.c: 115: return res;
+"115
+[e ) _res ]
+[e $UE 17  ]
+[; ;diskio.c: 116: }
+"116
+[e :UE 17 ]
+}
+"124
+[v _disk_write `(E10 ~T0 @X0 1 ef4`uc`*Cuc`ul`ui ]
+"130
+{
+[; ;diskio.c: 124: DRESULT disk_write (
+[; ;diskio.c: 125: BYTE pdrv,
+[; ;diskio.c: 126: const BYTE *buff,
+[; ;diskio.c: 127: DWORD sector,
+[; ;diskio.c: 128: UINT count
+[; ;diskio.c: 129: )
+[; ;diskio.c: 130: {
+[e :U _disk_write ]
+"125
+[v _pdrv `uc ~T0 @X0 1 r1 ]
+"126
+[v _buff `*Cuc ~T0 @X0 1 r2 ]
+"127
+[v _sector `ul ~T0 @X0 1 r3 ]
+"128
+[v _count `ui ~T0 @X0 1 r4 ]
+"130
+[f ]
+"131
+[v _res `E10 ~T0 @X0 1 a ]
+[; ;diskio.c: 131: DRESULT res = RES_PARERR;
+[e = _res . `E10 4 ]
+[; ;diskio.c: 133: switch (pdrv) {
+"133
+[e $U 26  ]
+{
+[; ;diskio.c: 134: case DRVA :
+"134
+[e :U 27 ]
+[; ;diskio.c: 135: if(SD_SPI_SectorWrite(sector, buff, count) == 1)
+"135
+[e $ ! == -> ( _SD_SPI_SectorWrite (3 , , _sector _buff _count `i -> 1 `i 28  ]
+[; ;diskio.c: 136: {
+"136
+{
+[; ;diskio.c: 137: res = RES_OK;
+"137
+[e = _res . `E10 0 ]
+"138
+}
+[; ;diskio.c: 138: }
+[e $U 29  ]
+"139
+[e :U 28 ]
+[; ;diskio.c: 139: else
+[; ;diskio.c: 140: {
+"140
+{
+[; ;diskio.c: 141: res = RES_ERROR;
+"141
+[e = _res . `E10 1 ]
+"142
+}
+[e :U 29 ]
+[; ;diskio.c: 142: }
+[; ;diskio.c: 143: break;
+"143
+[e $U 25  ]
+[; ;diskio.c: 145: default:
+"145
+[e :U 30 ]
+[; ;diskio.c: 146: break;
+"146
+[e $U 25  ]
+"147
+}
+[; ;diskio.c: 147: }
+[e $U 25  ]
+"133
+[e :U 26 ]
+[e [\ _pdrv , $ -> . `E84 0 `uc 27
+ 30 ]
+"147
+[e :U 25 ]
+[; ;diskio.c: 149: return res;
+"149
+[e ) _res ]
+[e $UE 24  ]
+[; ;diskio.c: 150: }
+"150
+[e :UE 24 ]
+}
+"158
+[v _disk_ioctl `(E10 ~T0 @X0 1 ef3`uc`uc`*v ]
+"163
+{
+[; ;diskio.c: 158: DRESULT disk_ioctl (
+[; ;diskio.c: 159: BYTE pdrv,
+[; ;diskio.c: 160: BYTE cmd,
+[; ;diskio.c: 161: void *buff
+[; ;diskio.c: 162: )
+[; ;diskio.c: 163: {
+[e :U _disk_ioctl ]
+"159
+[v _pdrv `uc ~T0 @X0 1 r1 ]
+"160
+[v _cmd `uc ~T0 @X0 1 r2 ]
+"161
+[v _buff `*v ~T0 @X0 1 r3 ]
+"163
+[f ]
+"164
+[v _res `E10 ~T0 @X0 1 a ]
+[; ;diskio.c: 164: DRESULT res = RES_OK;
+[e = _res . `E10 0 ]
+[; ;diskio.c: 166: switch (pdrv) {
+"166
+[e $U 33  ]
+{
+[; ;diskio.c: 167: case DRVA :
+"167
+[e :U 34 ]
+[; ;diskio.c: 168: return res;
+"168
+[e ) _res ]
+[e $UE 31  ]
+[; ;diskio.c: 170: default:
+"170
+[e :U 35 ]
+[; ;diskio.c: 171: break;
+"171
+[e $U 32  ]
+"172
+}
+[; ;diskio.c: 172: }
+[e $U 32  ]
+"166
+[e :U 33 ]
+[e [\ _pdrv , $ -> . `E84 0 `uc 34
+ 35 ]
+"172
+[e :U 32 ]
+[; ;diskio.c: 174: return RES_PARERR;
+"174
+[e ) . `E10 4 ]
+[e $UE 31  ]
+[; ;diskio.c: 175: }
+"175
+[e :UE 31 ]
+}

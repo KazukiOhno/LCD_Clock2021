@@ -65,7 +65,7 @@ uint8_t Bcd2Hex(uint8_t x) {
  */
 void RTC_resetAlarm(void) {
 
-    IOCBbits.IOCB4 = 0;
+    RTC_INTB_SetLow();
     //reg-EのWALEは、一度0にして、無効化
     I2C2_Write1ByteRegister(RX8025, 0xe0, RTC_regE & ~RTC_WALE); //E:bit7=WALE
     __delay_us(80); //Stopから次のStartまで、62us以上
@@ -108,7 +108,7 @@ void RTC_setAlarmTime(uint8_t *alarmtime) {
 //    後で設定 2020/11/23
     //Alarm割込み設定
     //interrupt on change for group IOCB - flag
-    IOCBbits.IOCB4 = 1;
+    RTC_INTB_SetHigh();
 }
 
 /*

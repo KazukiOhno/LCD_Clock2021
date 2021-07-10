@@ -184,9 +184,6 @@ uint8_t TouchStatus = 0;
 //6-: タッチ長押し処理完了
 //タッチすると0になる
 
-uint16_t TouchX, TouchY;
-uint16_t Test_x, Test_y;
-
 //RTC処理用
 //Sec, Min, Hour, Wday, Day, Month, Yearを配列化
 //値は、BCD10進とすることに注意。先頭は、Secのレジスタアドレス

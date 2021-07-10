@@ -1,0 +1,327 @@
+Version 3.2 HI-TECH Software Intermediate Code
+[v F128 `(v ~T0 @X0 0 tf ]
+[v F131 `(uc ~T0 @X0 0 tf ]
+[v F134 `(uc ~T0 @X0 0 tf1`uc ]
+[v F137 `(v ~T0 @X0 0 tf2`*v`ui ]
+[v F141 `(v ~T0 @X0 0 tf2`*v`ui ]
+[v F145 `(v ~T0 @X0 0 tf2`*v`ui ]
+[v F149 `(v ~T0 @X0 0 tf1`uc ]
+[v F152 `(uc ~T0 @X0 0 tf ]
+[v F157 `(v ~T0 @X0 0 tf ]
+[v F155 `(v ~T0 @X0 0 tf1`*F157 ]
+[v F160 `(v ~T0 @X0 0 tf ]
+"56 mcc_generated_files/drivers/spi_master.h
+[s S2 `*F128 1 `*F131 1 `*F134 1 `*F137 1 `*F141 1 `*F145 1 `*F149 1 `*F152 1 `*F155 1 `*F160 1 ]
+[n S2 . spiClose spiOpen exchangeByte exchangeBlock writeBlock readBlock writeByte readByte setSpiISR spiISR ]
+"69 mcc_generated_files/drivers/../spi1.h
+[v _SPI1_Close `(v ~T0 @X0 0 ef ]
+"35 mcc_generated_files/drivers/spi_master.c
+[v _SDFAST_open `(uc ~T0 @X0 0 ef ]
+"70 mcc_generated_files/drivers/../spi1.h
+[v _SPI1_ExchangeByte `(uc ~T0 @X0 0 ef1`uc ]
+"71
+[v _SPI1_ExchangeBlock `(v ~T0 @X0 0 ef2`*v`ui ]
+"72
+[v _SPI1_WriteBlock `(v ~T0 @X0 0 ef2`*v`ui ]
+"73
+[v _SPI1_ReadBlock `(v ~T0 @X0 0 ef2`*v`ui ]
+"74
+[v _SPI1_WriteByte `(v ~T0 @X0 0 ef1`uc ]
+"75
+[v _SPI1_ReadByte `(uc ~T0 @X0 0 ef ]
+"36 mcc_generated_files/drivers/spi_master.c
+[v _LCD8M_open `(uc ~T0 @X0 0 ef ]
+"37
+[v _SDSLOW_open `(uc ~T0 @X0 0 ef ]
+"38
+[v _Touch2M_open `(uc ~T0 @X0 0 ef ]
+"48
+[c E92 0 1 2 3 4 .. ]
+[n E92 . SDFAST_CONFIG LCD8M_CONFIG SDSLOW_CONFIG SPI1_DEFAULT Touch2M_CONFIG  ]
+"68 mcc_generated_files/drivers/../spi1.h
+[v _SPI1_Open `(uc ~T0 @X0 0 ef1`E92 ]
+"74 mcc_generated_files/drivers/spi_master.c
+[c E120 0 1 2 3 .. ]
+[n E120 . SDFAST LCD8M SDSLOW Touch2M  ]
+[; ;stdint.h: 13: typedef signed char int8_t;
+[; ;stdint.h: 20: typedef signed int int16_t;
+[; ;stdint.h: 28: typedef __int24 int24_t;
+[; ;stdint.h: 36: typedef signed long int int32_t;
+[; ;stdint.h: 52: typedef unsigned char uint8_t;
+[; ;stdint.h: 58: typedef unsigned int uint16_t;
+[; ;stdint.h: 65: typedef __uint24 uint24_t;
+[; ;stdint.h: 72: typedef unsigned long int uint32_t;
+[; ;stdint.h: 88: typedef signed char int_least8_t;
+[; ;stdint.h: 96: typedef signed int int_least16_t;
+[; ;stdint.h: 109: typedef __int24 int_least24_t;
+[; ;stdint.h: 118: typedef signed long int int_least32_t;
+[; ;stdint.h: 136: typedef unsigned char uint_least8_t;
+[; ;stdint.h: 143: typedef unsigned int uint_least16_t;
+[; ;stdint.h: 154: typedef __uint24 uint_least24_t;
+[; ;stdint.h: 162: typedef unsigned long int uint_least32_t;
+[; ;stdint.h: 181: typedef signed char int_fast8_t;
+[; ;stdint.h: 188: typedef signed int int_fast16_t;
+[; ;stdint.h: 200: typedef __int24 int_fast24_t;
+[; ;stdint.h: 208: typedef signed long int int_fast32_t;
+[; ;stdint.h: 224: typedef unsigned char uint_fast8_t;
+[; ;stdint.h: 230: typedef unsigned int uint_fast16_t;
+[; ;stdint.h: 240: typedef __uint24 uint_fast24_t;
+[; ;stdint.h: 247: typedef unsigned long int uint_fast32_t;
+[; ;stdint.h: 268: typedef int32_t intmax_t;
+[; ;stdint.h: 282: typedef uint32_t uintmax_t;
+[; ;stdint.h: 289: typedef int16_t intptr_t;
+[; ;stdint.h: 294: typedef uint16_t uintptr_t;
+[; ;stdbool.h: 15: typedef unsigned char bool;
+[; ;xc8\pic\include\__size_t.h: 4: typedef unsigned size_t;
+[; ;stdarg.h: 7: typedef void * va_list[1];
+[; ;stdarg.h: 10: extern void * __va_start(void);
+[; ;stdarg.h: 13: extern void * __va_arg(void *, ...);
+[; ;stdio.h: 43: struct __prbuf
+[; ;stdio.h: 44: {
+[; ;stdio.h: 45: char * ptr;
+[; ;stdio.h: 46: void (* func)(char);
+[; ;stdio.h: 47: };
+[; ;errno.h: 29: extern int errno;
+[; ;conio.h: 12: extern void init_uart(void);
+[; ;conio.h: 14: extern char getch(void);
+[; ;conio.h: 15: extern char getche(void);
+[; ;conio.h: 16: extern void putch(char);
+[; ;conio.h: 17: extern void ungetch(char);
+[; ;conio.h: 19: extern __bit kbhit(void);
+[; ;conio.h: 23: extern char * cgets(char *);
+[; ;conio.h: 24: extern void cputs(const char *);
+[; ;stdio.h: 88: extern int cprintf(char *, ...);
+[; ;stdio.h: 93: extern int _doprnt(struct __prbuf *, const register char *, register va_list);
+[; ;stdio.h: 183: extern char * gets(char *);
+[; ;stdio.h: 184: extern int puts(const char *);
+[; ;stdio.h: 185: extern int scanf(const char *, ...) __attribute__((unsupported("scanf() is not supported by this compiler")));
+[; ;stdio.h: 186: extern int sscanf(const char *, const char *, ...) __attribute__((unsupported("sscanf() is not supported by this compiler")));
+[; ;stdio.h: 187: extern int vprintf(const char *, va_list) __attribute__((unsupported("vprintf() is not supported by this compiler")));
+[; ;stdio.h: 188: extern int vsprintf(char *, const char *, va_list) __attribute__((unsupported("vsprintf() is not supported by this compiler")));
+[; ;stdio.h: 189: extern int vscanf(const char *, va_list ap) __attribute__((unsupported("vscanf() is not supported by this compiler")));
+[; ;stdio.h: 190: extern int vsscanf(const char *, const char *, va_list) __attribute__((unsupported("vsscanf() is not supported by this compiler")));
+[; ;stdio.h: 194: extern int sprintf(char *, const char *, ...);
+[; ;stdio.h: 195: extern int printf(const char *, ...);
+[; ;stdbool.h: 15: typedef unsigned char bool;
+[; ;spi1.h: 59: typedef enum {
+[; ;spi1.h: 60: SDFAST_CONFIG,
+[; ;spi1.h: 61: LCD8M_CONFIG,
+[; ;spi1.h: 62: SDSLOW_CONFIG,
+[; ;spi1.h: 63: SPI1_DEFAULT,
+[; ;spi1.h: 64: Touch2M_CONFIG
+[; ;spi1.h: 65: } spi1_modes_t;
+[; ;spi1.h: 67: void SPI1_Initialize(void);
+[; ;spi1.h: 68: bool SPI1_Open(spi1_modes_t spi1UniqueConfiguration);
+[; ;spi1.h: 69: void SPI1_Close(void);
+[; ;spi1.h: 70: uint8_t SPI1_ExchangeByte(uint8_t data);
+[; ;spi1.h: 71: void SPI1_ExchangeBlock(void *block, size_t blockSize);
+[; ;spi1.h: 72: void SPI1_WriteBlock(void *block, size_t blockSize);
+[; ;spi1.h: 73: void SPI1_ReadBlock(void *block, size_t blockSize);
+[; ;spi1.h: 74: void SPI1_WriteByte(uint8_t byte);
+[; ;spi1.h: 75: uint8_t SPI1_ReadByte(void);
+[; ;spi_master.h: 45: typedef enum {
+[; ;spi_master.h: 46: SDFAST,
+[; ;spi_master.h: 47: LCD8M,
+[; ;spi_master.h: 48: SDSLOW,
+[; ;spi_master.h: 49: Touch2M
+[; ;spi_master.h: 50: } spi_master_configurations_t;
+[; ;spi_master.h: 56: typedef struct { void (*spiClose)(void);
+[; ;spi_master.h: 57: bool (*spiOpen)(void);
+[; ;spi_master.h: 58: uint8_t (*exchangeByte)(uint8_t b);
+[; ;spi_master.h: 59: void (*exchangeBlock)(void * block, size_t blockSize);
+[; ;spi_master.h: 60: void (*writeBlock)(void * block, size_t blockSize);
+[; ;spi_master.h: 61: void (*readBlock)(void * block, size_t blockSize);
+[; ;spi_master.h: 62: void (*writeByte)(uint8_t byte);
+[; ;spi_master.h: 63: uint8_t (*readByte)(void);
+[; ;spi_master.h: 64: void (*setSpiISR)(void(*handler)(void));
+[; ;spi_master.h: 65: void (*spiISR)(void);
+[; ;spi_master.h: 66: } spi_master_functions_t;
+[; ;spi_master.h: 68: extern const spi_master_functions_t spiMaster[];
+[; ;spi_master.h: 70: bool spi_master_open(spi_master_configurations_t config);
+[; ;spi_master.c: 35: bool SDFAST_open(void);
+[; ;spi_master.c: 36: bool LCD8M_open(void);
+[; ;spi_master.c: 37: bool SDSLOW_open(void);
+[; ;spi_master.c: 38: bool Touch2M_open(void);
+"40 mcc_generated_files/drivers/spi_master.c
+[v _spiMaster `CS2 ~T0 @X0 -> 0 `x e ]
+[i _spiMaster
+:U ..
+:U ..
+"41
+&U _SPI1_Close
+&U _SDFAST_open
+&U _SPI1_ExchangeByte
+&U _SPI1_ExchangeBlock
+&U _SPI1_WriteBlock
+&U _SPI1_ReadBlock
+&U _SPI1_WriteByte
+&U _SPI1_ReadByte
+-> -> 0 `i `*F155
+-> -> 0 `i `*F160
+..
+:U ..
+"42
+&U _SPI1_Close
+&U _LCD8M_open
+&U _SPI1_ExchangeByte
+&U _SPI1_ExchangeBlock
+&U _SPI1_WriteBlock
+&U _SPI1_ReadBlock
+&U _SPI1_WriteByte
+&U _SPI1_ReadByte
+-> -> 0 `i `*F155
+-> -> 0 `i `*F160
+..
+:U ..
+"43
+&U _SPI1_Close
+&U _SDSLOW_open
+&U _SPI1_ExchangeByte
+&U _SPI1_ExchangeBlock
+&U _SPI1_WriteBlock
+&U _SPI1_ReadBlock
+&U _SPI1_WriteByte
+&U _SPI1_ReadByte
+-> -> 0 `i `*F155
+-> -> 0 `i `*F160
+..
+:U ..
+"44
+&U _SPI1_Close
+&U _Touch2M_open
+&U _SPI1_ExchangeByte
+&U _SPI1_ExchangeBlock
+&U _SPI1_WriteBlock
+&U _SPI1_ReadBlock
+&U _SPI1_WriteByte
+&U _SPI1_ReadByte
+-> -> 0 `i `*F155
+-> -> 0 `i `*F160
+..
+..
+]
+[; ;spi_master.c: 40: const spi_master_functions_t spiMaster[] = {
+[; ;spi_master.c: 41: { SPI1_Close, SDFAST_open, SPI1_ExchangeByte, SPI1_ExchangeBlock, SPI1_WriteBlock, SPI1_ReadBlock, SPI1_WriteByte, SPI1_ReadByte, (0), (0) },
+[; ;spi_master.c: 42: { SPI1_Close, LCD8M_open, SPI1_ExchangeByte, SPI1_ExchangeBlock, SPI1_WriteBlock, SPI1_ReadBlock, SPI1_WriteByte, SPI1_ReadByte, (0), (0) },
+[; ;spi_master.c: 43: { SPI1_Close, SDSLOW_open, SPI1_ExchangeByte, SPI1_ExchangeBlock, SPI1_WriteBlock, SPI1_ReadBlock, SPI1_WriteByte, SPI1_ReadByte, (0), (0) },
+[; ;spi_master.c: 44: { SPI1_Close, Touch2M_open, SPI1_ExchangeByte, SPI1_ExchangeBlock, SPI1_WriteBlock, SPI1_ReadBlock, SPI1_WriteByte, SPI1_ReadByte, (0), (0) }
+[; ;spi_master.c: 45: };
+"47
+[v _SDFAST_open `(uc ~T0 @X0 1 ef ]
+{
+[; ;spi_master.c: 47: bool SDFAST_open(void){
+[e :U _SDFAST_open ]
+[f ]
+[; ;spi_master.c: 48: return SPI1_Open(SDFAST_CONFIG);
+"48
+[e ) ( _SPI1_Open (1 . `E92 0 ]
+[e $UE 3  ]
+[; ;spi_master.c: 49: }
+"49
+[e :UE 3 ]
+}
+"51
+[v _LCD8M_open `(uc ~T0 @X0 1 ef ]
+{
+[; ;spi_master.c: 51: bool LCD8M_open(void){
+[e :U _LCD8M_open ]
+[f ]
+[; ;spi_master.c: 52: return SPI1_Open(LCD8M_CONFIG);
+"52
+[e ) ( _SPI1_Open (1 . `E92 1 ]
+[e $UE 4  ]
+[; ;spi_master.c: 53: }
+"53
+[e :UE 4 ]
+}
+"55
+[v _SDSLOW_open `(uc ~T0 @X0 1 ef ]
+{
+[; ;spi_master.c: 55: bool SDSLOW_open(void){
+[e :U _SDSLOW_open ]
+[f ]
+[; ;spi_master.c: 56: return SPI1_Open(SDSLOW_CONFIG);
+"56
+[e ) ( _SPI1_Open (1 . `E92 2 ]
+[e $UE 5  ]
+[; ;spi_master.c: 57: }
+"57
+[e :UE 5 ]
+}
+"59
+[v _Touch2M_open `(uc ~T0 @X0 1 ef ]
+{
+[; ;spi_master.c: 59: bool Touch2M_open(void){
+[e :U _Touch2M_open ]
+[f ]
+[; ;spi_master.c: 60: return SPI1_Open(Touch2M_CONFIG);
+"60
+[e ) ( _SPI1_Open (1 . `E92 4 ]
+[e $UE 6  ]
+[; ;spi_master.c: 61: }
+"61
+[e :UE 6 ]
+}
+"74
+[v _spi_master_open `(uc ~T0 @X0 1 ef1`E120 ]
+{
+[; ;spi_master.c: 74: bool spi_master_open(spi_master_configurations_t config){
+[e :U _spi_master_open ]
+[v _config `E120 ~T0 @X0 1 r1 ]
+[f ]
+[; ;spi_master.c: 75: switch(config){
+"75
+[e $U 9  ]
+{
+[; ;spi_master.c: 76: case SDFAST:
+"76
+[e :U 10 ]
+[; ;spi_master.c: 77: return SDFAST_open();
+"77
+[e ) ( _SDFAST_open ..  ]
+[e $UE 7  ]
+[; ;spi_master.c: 78: case LCD8M:
+"78
+[e :U 11 ]
+[; ;spi_master.c: 79: return LCD8M_open();
+"79
+[e ) ( _LCD8M_open ..  ]
+[e $UE 7  ]
+[; ;spi_master.c: 80: case SDSLOW:
+"80
+[e :U 12 ]
+[; ;spi_master.c: 81: return SDSLOW_open();
+"81
+[e ) ( _SDSLOW_open ..  ]
+[e $UE 7  ]
+[; ;spi_master.c: 82: case Touch2M:
+"82
+[e :U 13 ]
+[; ;spi_master.c: 83: return Touch2M_open();
+"83
+[e ) ( _Touch2M_open ..  ]
+[e $UE 7  ]
+[; ;spi_master.c: 84: default:
+"84
+[e :U 14 ]
+[; ;spi_master.c: 85: return 0;
+"85
+[e ) -> -> 0 `i `uc ]
+[e $UE 7  ]
+"86
+}
+[; ;spi_master.c: 86: }
+[e $U 8  ]
+"75
+[e :U 9 ]
+[e [\ _config , $ . `E120 0 10
+ , $ . `E120 1 11
+ , $ . `E120 2 12
+ , $ . `E120 3 13
+ 14 ]
+"86
+[e :U 8 ]
+[; ;spi_master.c: 87: }
+"87
+[e :UE 7 ]
+}
