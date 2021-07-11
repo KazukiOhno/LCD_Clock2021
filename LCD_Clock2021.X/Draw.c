@@ -321,7 +321,7 @@ void drawAlarmNeedle(uint16_t *x, uint16_t *y, uint16_t color) {
 //秒針
 //目盛の長さ=3
 //ドットの大きさ=2
-void DrawAnalogClock(uint8_t mode, uint8_t * datetime, uint16_t xx, uint16_t yy, uint8_t size, uint16_t color) {
+void DrawAnalogClock(uint8_t mode, uint8_t * datetime, uint16_t xx, uint16_t yy, uint8_t size, uint16_t color, uint8_t *alarmtime) {
     uint16_t xc, yc;    //時計の中心
     uint16_t rc, rc1, rcs, rcm, rch, rca;    //時計のサイズ、目盛、秒針、分針、時針、アラーム
     uint16_t rc2;
@@ -329,6 +329,7 @@ void DrawAnalogClock(uint8_t mode, uint8_t * datetime, uint16_t xx, uint16_t yy,
     uint16_t x[5], y[5];    //座標計算した結果を格納
     uint16_t temp, angle;
     int8_t jj, hh, mm, ss, kk;
+    static int8_t almhh, almmm;
     //前回の座標
     static uint16_t phx[5], phy[5], pmx[5], pmy[5], psx[5], psy[5], pax[5], pay[5];
     //今回の座標
@@ -356,10 +357,12 @@ void DrawAnalogClock(uint8_t mode, uint8_t * datetime, uint16_t xx, uint16_t yy,
     //最新のアラーム針の座標を計算
     rca = rc1 *3 /4;    //アラーム用の針の長さは、長針の75%
 
-    mm = ((AlarmTime[0]>>4)*10 + (AlarmTime[0] & 0x0f));
-    hh = (AlarmTime[1]>>4)*10 + (AlarmTime[1] & 0x0f);
-    hh = hh % 12;
-    angle = hh * 30 + mm/2;   //角度に変換
+    if (alarmtime != NULL) {
+        almmm = Bcd2Hex(alarmtime[0]);
+        almhh = Bcd2Hex(alarmtime[1]);
+    }
+    almhh = almhh % 12;
+    angle = almhh * 30 + almmm/2;   //角度に変換
     cax[0] = xc;    //中心座標
     cay[0] = yc;
     cax[1] = xc + rca * sind(angle)/256;
@@ -524,7 +527,7 @@ void DrawAnalogClock(uint8_t mode, uint8_t * datetime, uint16_t xx, uint16_t yy,
     // AM/PMの表示
     if (datetime[2] < 0x12) sprintf(str, "AM");
     else sprintf(str, "PM");
-    display_drawChars(xx-14, yy+rc/2, str, color, color, 2);
+    display_drawChars(xx-14, yy+rc/2, str, color, BLACK, 2);
     
     //ここから、針の描画を実行
     //アラーム針描画------------------------------------------------------
@@ -738,7 +741,7 @@ void drawAlarmTime(uint8_t mode, uint8_t *alarmtime) {
     else pm = '-';
     
     if (mode == DisplayMode3) {
-        DrawAnalogClock(mode, DateTime, RTime[mode].x, RTime[mode].y, RTime[mode].xw, GREY);
+        DrawAnalogClock(mode, DateTime, RTime[mode].x, RTime[mode].y, RTime[mode].xw, GREY, alarmtime);
         if (alarmtime[1] >= 0x12) ap= 1 ;   //BCDで12時以降なら午後
         else ap = 0;
         sprintf(str, "Alarm%c %s %02d:%02x", pm, ampm[ap], (alarmtime[1] & 0xf) + (alarmtime[1] >> 4)*10 -12*ap, alarmtime[0]);
@@ -754,7 +757,7 @@ void drawTime(uint8_t mode, uint8_t * datetime, uint16_t color) {
 
     if (mode == DisplayMode3) {
         //外形円の座標= (140, 130) 半径=90
-        DrawAnalogClock(mode, datetime, RTime[mode].x, RTime[mode].y, RTime[mode].xw, color);
+        DrawAnalogClock(mode, datetime, RTime[mode].x, RTime[mode].y, RTime[mode].xw, color, NULL);
     } else {
         DispTime(RTime[mode].mode, datetime, RTime[mode].x, RTime[mode].y, RTime[mode].font, color);
     }

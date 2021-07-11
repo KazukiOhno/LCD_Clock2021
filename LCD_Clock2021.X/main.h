@@ -187,7 +187,7 @@ uint8_t preDateTime[3]; //年月日を保持しておき、変化をチェックできるようにする
 //アラーム時刻、mm,hh, アラームが有効な曜日　RTCと同じ順序
 uint8_t TmpTime[7]; //設定途中の時刻を保持
 
-uint8_t AlarmTime[3] = {0, 0, 0x7f};
+uint8_t AlarmTime[3] = {0, 0, 0x7f};    //mm, hh, wday
 uint8_t SmoothAlarmTime[3] = {0, 0, 0x7f};
 
 uint8_t FirstDraw = 1;  // 表示モード変更後、最初の描画=1かどうか

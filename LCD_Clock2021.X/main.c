@@ -188,7 +188,6 @@ char * BufferP;     //バッファのデータ位置を示すポインタ
 uint8_t SDcardStatus = 0;
 FATFS drive;
 FIL file;
-uint8_t MountDone = 0;  //マウントしたら、1
 
 /*
  * 10ms毎に割り込み
