@@ -364,7 +364,7 @@ void display_drawChars(uint16_t x, uint16_t y, char *s, uint16_t color, uint16_t
   display_setTextSize(size);
   display_setTextColor(color, bg);
   
-//  display_SetFont(font);
+//  display_SetFont(NormalFont);
   display_puts(s);  //Ç±Ç±ÇïœçX
   
   Cursor_x    = prev_x;
@@ -805,12 +805,12 @@ void display_fillCircle(uint16_t x0, uint16_t y0, uint16_t r, uint16_t color) {
 //{
 //    uint8_t j, k, i;
 //    
-//    for(j=0; j < font[fIndex]; j++) {   // variable character width
-//        lcd_set_cursor(x + font[fIndex] - j, y); // print from right to left
+//    for(j=0; j < NormalFont[fIndex]; j++) {   // variable character width
+//        lcd_set_cursor(x + NormalFont[fIndex] - j, y); // print from right to left
 //        
 //        for(k=0; k<FONT_HEIGHT; k++) {  // _ bytes per character (height)
 //            for(i=0; i<8; i++) {
-//                if( font[ (fIndex + ((font[fIndex]) << 1)) - (j<<1) - k ] & (0x80 >> i) ) {
+//                if( NormalFont[ (fIndex + ((NormalFont[fIndex]) << 1)) - (j<<1) - k ] & (0x80 >> i) ) {
 //                    draw_pixel(fg_color);
 //                }
 //                else {
@@ -831,14 +831,14 @@ void display_fillCircle(uint16_t x0, uint16_t y0, uint16_t r, uint16_t color) {
 //        /* index the width information of character <c> */
 //        lIndex = 0;
 //        for (k=0; k<(*pS - ' '); k++) {
-//            lIndex += ((font[lIndex]) << 1) + 1;
+//            lIndex += ((NormalFont[lIndex]) << 1) + 1;
 //        }
 //        
 //        /* draw character */
 //        lcd_draw_char(x, y, lIndex, fg_color, bg_color);
 //        
 //        /* move the cursor forward for the next character */
-//        x += font[lIndex];
+//        x += NormalFont[lIndex];
 //        
 //        /* next character */
 //        pS++;

@@ -35,7 +35,7 @@ http://www.geocities.jp/littlimi/font.htm
 // bmpファイルから、perl bmp2txt.pl [bitmap.bmp] で生成する
 // そこから手修正。絵のデータは、部品在庫.xlsxに。
 // 2021/3現在有効なフォントは、Font.xlsxのPIC clock2020のシートからコピーしたもの
-const uint8_t font[] = {
+const uint8_t NormalFont[] = {
     8, 8, 8, 8, ' ', 0, 0, 0,   //先頭の8バイトはx,ysize, x,ypitch, データ先頭の文字を指定
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // '　' 0x20
     0x00, 0x00, 0x6F, 0x6F, 0x03, 0x00, 0x00, 0x00, // '!'

@@ -137,21 +137,12 @@ rbox RAlarm[MODENUM] = {
     { AlarmX+100, 35,     AlarmXw, AlarmYw, 2, 0 },
     { 15,         23,     AlarmXw, AlarmYw, 0x13, 0 },
 };
-//小さなカレンダーの表示位置
-rbox RPrevMonthCalendar[MODENUM] = {
+//カレンダーの表示位置
+//基本座標と、X,Ystepがあれば情報としては十分
+rbox MonthCalendar[MODENUM] = {
     { CalendarX,          CalendarY,   CalendarXstep, CalendarYw, 2, 0 },
     { 20,                 65,          320,           200, 2, 0 },
     { 320-CalendarXstep,  40,          CalendarXstep, CalendarYw, 2, 0 },    //
-};
-rbox RThisMonthCalendar[MODENUM] = {
-    { CalendarX+CalendarXstep, CalendarY,     CalendarXstep, CalendarYw, 2, 0 },
-    { 20,                      65,            320,           200, 2, 0 },
-    { 320-CalendarXstep,       40+CalendarYw, CalendarXstep, CalendarYw, 2, 0 },    //
-};
-rbox RPostMonthCalendar[MODENUM] = {
-    { CalendarX+CalendarXstep*2, CalendarY,     CalendarXstep, CalendarYw, 2, 0 },
-    { 20,                        65,            320,           200, 2, 0 },
-    { 320-CalendarXstep,         40+CalendarYw*2, CalendarXstep, CalendarYw, 2, 0 },    //
 };
 
 #define BtnYear     0

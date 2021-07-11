@@ -76,7 +76,7 @@ COLOR BackColor = {0x0000};
 FontStruct Font = {
   8,8,      //8x8 dot, normal font
   8,8,      //8x8 dot pitch
-  font      //ノーマルフォント
+  NormalFont      //ノーマルフォント
 };
 //uint8_t AccessSD = 0;   //SDカード処理中=1
 

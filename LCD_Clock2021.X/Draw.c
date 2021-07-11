@@ -293,6 +293,9 @@ int16_t cosd(uint16_t theta) {
 #define ColorAlarm  YELLOW
 
 
+/*
+ * アナログ時計のアラーム針を描画
+ */
 void drawAlarmNeedle(uint16_t *x, uint16_t *y, uint16_t color) {
     int16_t xd, yd;
     
@@ -310,7 +313,6 @@ void drawAlarmNeedle(uint16_t *x, uint16_t *y, uint16_t color) {
         display_drawLine(x[0], y[0]+1, x[1], y[1]+1, color);
     }
 }
-
 
 
 //アラーム針の長さは長針の75%
@@ -563,11 +565,15 @@ void DrawAnalogClock(uint8_t mode, uint8_t * datetime, uint16_t xx, uint16_t yy,
 }
 
 /*
- * 大きなカレンダーを表示
- * xs,ysが描画する左上の座標
+ * フォント指定して大きさに関係なく描画できるようにする
+ * 左上の座標: xs, ys
+ * フォントサイズ: fontsize, fontw, fonth
+ * 表示ピッチ: xpitch(未使用), ypitch, space
  */
-void DrawBigCalendar(uint8_t year, uint8_t month, uint16_t xs, uint16_t ys) {
-    uint8_t jj, kk, fontw, fonth, ypitch, space;
+
+void DrawCalendar(uint8_t year, uint8_t month, uint16_t xs, uint16_t ys, uint8_t xpitch, uint8_t ypitch, 
+        uint8_t fontsize, uint8_t fontw, uint8_t fonth, uint8_t space) {
+    uint8_t jj, kk;
     uint16_t xx, yy;
     char str[5];
     int8_t startday;    //最初の日曜の日付、0以下は前月
@@ -575,13 +581,8 @@ void DrawBigCalendar(uint8_t year, uint8_t month, uint16_t xs, uint16_t ys) {
     uint8_t yr, mm, dd, wd;
     uint16_t color = WHITE;
     uint16_t backColor = BLACK;
+    uint8_t thismonth;
 
-    //表示フォントの大きさ
-    fontw = Font.xsize * 2;    //16
-    space = 4;
-    fonth = Font.ysize*2 +2;   //18;
-    ypitch = fonth+4;
-    
     yr = year;
     mm = month;
     dd = 1;
@@ -589,6 +590,9 @@ void DrawBigCalendar(uint8_t year, uint8_t month, uint16_t xs, uint16_t ys) {
     //1日が日曜なら1、月曜なら0、火曜なら-1、水曜なら-2になる
     startday = 1- wd;
     
+    if (month == Bcd2Hex(DateTime[5])) thismonth = 1;
+    else thismonth = 0;
+
     //当該月の最終日を取得
     dd = 31;
     getWeekdays(&yr, &mm, &dd);  //31日の曜日を取得。その日がない場合、自動調整される
@@ -607,7 +611,7 @@ void DrawBigCalendar(uint8_t year, uint8_t month, uint16_t xs, uint16_t ys) {
     xx = xs + 3*(fontw*2+space);
     if (month <10) xx = xx + fontw/2;    //2桁の時、半文字ずらす    
     sprintf(str, "%d", month);
-    display_drawChars(xx, yy, str, color, backColor, 2);
+    display_drawChars(xx, yy, str, color, backColor, fontsize);
 
     //曜日
     yy += ypitch;
@@ -615,12 +619,16 @@ void DrawBigCalendar(uint8_t year, uint8_t month, uint16_t xs, uint16_t ys) {
     for (jj=0; jj<7; jj++) {
 //        sprintf(str, "%c", WeekDays[jj][0]);  //SMTWTFSという表記方式
         sprintf(str, "%c", 0x80+jj);    //日月火水木金土という表示
-        display_drawChars(xx, yy, str, color, backColor, 2);
+        display_drawChars(xx, yy, str, color, backColor, fontsize);
         xx += fontw * 2 +space;
     }
     
     //日付
     yy += ypitch;
+    if (fontsize == 1) {
+        display_SetFont(tinyfont);
+    }
+
     for (kk = 0; kk<6; kk++) {
         xx = xs;
         for (jj = 0; jj < 7; jj++) {
@@ -629,15 +637,12 @@ void DrawBigCalendar(uint8_t year, uint8_t month, uint16_t xs, uint16_t ys) {
                 if (jj==0) color = RED;         //日曜
                 else if (jj==6) color = BLUE;   //土曜
                 else color = WHITE;             //平日
+                display_drawChars(xx, yy, str, color, backColor, fontsize);
                 //今日の日付に印をつける
-                if (startday == Bcd2Hex(DateTime[4])) {
+                if (thismonth && (startday == Bcd2Hex(DateTime[4]))) {
 //                    display_drawChars2(xx, yy, str, backColor, color, 1);
                     //反転だと視認しにくいので枠を付ける
-                    display_drawChars(xx, yy, str, color, backColor, 2);
                     display_drawRect(xx-1, yy-2, fontw*2+2, fonth+2, WHITE);
-                }
-                else {
-                    display_drawChars(xx, yy, str, color, backColor, 2);
                 }
             }
             startday++;
@@ -645,8 +650,25 @@ void DrawBigCalendar(uint8_t year, uint8_t month, uint16_t xs, uint16_t ys) {
         }
         yy += ypitch;
     }
+    display_SetFont(NormalFont);  //元に戻す
+
+}
+
+/*
+ * 大きなカレンダーを表示
+ * xs,ysが描画する左上の座標
+ */
+void DrawBigCalendar(uint8_t year, uint8_t month, uint16_t xs, uint16_t ys) {
+    uint8_t fontw, fonth, ypitch, space;
+
+    //表示フォントの大きさ
+    fontw = Font.xsize * 2;    //16
+    space = 4;
+    fonth = Font.ysize*2 +2;   //18;
+    ypitch = fonth+4;
     
-    
+    DrawCalendar(year, month, xs, ys, 0, ypitch, 2, fontw, fonth, space);
+        
 }
 
 
@@ -657,87 +679,23 @@ void DrawBigCalendar(uint8_t year, uint8_t month, uint16_t xs, uint16_t ys) {
  * xs, ys: 表示の基準位置　左上
  */
 void DrawSmallCalendar(uint8_t year, uint8_t month, uint16_t xs, uint16_t ys) {
-    uint8_t jj, kk, fontw, fonth, ypitch;
-    uint16_t xx, yy;
-    char str[5];
-    int8_t startday;    //最初の日曜の日付、マイナスは前月
-    int8_t maxdays;
-    uint8_t yr, mm, dd, wd;
-    uint16_t color = WHITE;
-    uint16_t backColor = BLACK;
-    uint8_t thismonth;
+    uint8_t fontw, fonth, ypitch;
 
-    if (month == Bcd2Hex(DateTime[5])) thismonth = 1;
-    else thismonth = 0;
+    //前月、次月の表示のため、0月、13月という設定を許す
+    if (month == 0) {
+        month = 12;
+        year--;
+    }
+    if (month == 13) {
+        month = 1;
+        year++;
+    }
     
     fontw = 6;
     fonth = 8;
     ypitch = fonth+2;
     
-    yr = year;
-    mm = month;
-    dd = 1;
-    wd = getWeekdays(&yr, &mm, &dd);  //1日の曜日を取得
-    //1日が日曜なら1、月曜なら0、火曜なら-1、水曜なら-2、
-    startday = 1- wd;
-    
-    dd = 31;
-    getWeekdays(&yr, &mm, &dd);  //1日の曜日を取得
-    //mmが変更になったら、31日はなかったとわかる
-    if (month != mm) {
-        maxdays = 31 - dd;    //その月の最終日
-    } else {
-        maxdays = 31;
-    }   
-    
-    //対象領域をクリア    日曜の日付の枠の左側が残ってしまうので、xsからxs-1に変更
-    lcd_fill_rect(xs-1, ys, xs+fontw*14+7, ys+ypitch*8, backColor);
-    //月の描画
-    yy = ys;
-    xx = xs+3 + 3*(fontw*2);
-    if (month <10) xx = xx + fontw/2;    //2桁の時、半文字ずらす    
-    sprintf(str, "%d", month);
-    display_drawChars(xx, yy, str, color, backColor, 1);
-    yy += ypitch;
-
-    //曜日
-    xx = xs+3;
-    for (jj=0; jj<7; jj++) {
-//        sprintf(str, "%c", WeekDays[jj][0]);  //SMTWTFSという表記方式
-        sprintf(str, "%c", 0x80+jj);    //日月火水木金土という表示
-        display_drawChars(xx, yy, str, color, backColor, 1);
-        xx += fontw * 2 +1;
-    }
-    
-    //日付
-    yy += ypitch;
-    for (kk = 0; kk<6; kk++) {
-        xx = xs;
-        for (jj = 0; jj < 7; jj++) {
-            if (startday > 0 && startday <= maxdays) {
-                sprintf(str, "%2d", startday);
-                if (jj==0) color = RED;
-                else if (jj==6) color = BLUE;
-                else color = WHITE;
-                //今日の日付だけ色反転
-                display_SetFont(tinyfont);
-                if (thismonth && (startday == Bcd2Hex(DateTime[4]))) {
-//                    display_drawChars2(xx, yy, str, backColor, color, 1);
-                    //反転だと視認しにくいので枠を付ける
-                    display_drawChars(xx, yy, str, color, backColor, 1);
-                    display_drawRect(xx-1, yy-2, 14, 11, WHITE);
-                }
-                else {
-                    display_drawChars(xx, yy, str, color, backColor, 1);
-                }
-                display_SetFont(font);  //元に戻す
-            }
-            startday++;
-            xx += fontw*2 +1;
-        }
-        yy += ypitch;
-    }
-    
+    DrawCalendar(year, month, xs, ys, 0, ypitch, 1, fontw, fonth, 1);
     
 }
 
@@ -752,64 +710,42 @@ void DrawSmallCalendar(uint8_t year, uint8_t month, uint16_t xs, uint16_t ys) {
  */
 void Draw3month(uint8_t startyear, uint8_t startmonth, uint8_t mode) {
     uint8_t yy, mm;
+    uint8_t jj;
+    uint16_t xstep = CalendarXstep;  //mode=DisplayMode1
+    uint16_t ystep = CalendarYw; //mode=DisplayMode3
     
+    if (mode == DisplayMode1) ystep = 0;
+    if (mode == DisplayMode3) xstep = 0;
     //3か月カレンダのX,Y座標は、リソースから取得
-
-    //前月の計算
-    if (startmonth == 1) {
-        mm = 12;
-        yy = startyear -1;
-    } else {
-        mm = startmonth - 1;
-        yy = startyear;
+    //Mode3のアナログ時計表示の時は、2か月分しか表示しない→表示が欠けても良しとする
+    for (jj=0; jj<3; jj++) {
+        DrawSmallCalendar(startyear, startmonth+jj-1, MonthCalendar[mode].x +xstep*jj, MonthCalendar[mode].y +ystep*jj);
     }
-    DrawSmallCalendar(yy, mm, RPrevMonthCalendar[mode].x, RPrevMonthCalendar[mode].y);
-
-    //当月
-    mm = startmonth;
-    yy = startyear;
-    DrawSmallCalendar(yy, mm, RThisMonthCalendar[mode].x, RThisMonthCalendar[mode].y);
-
-//    if (mode != DisplayMode3) {
-        //Mode3のアナログ時計表示の時は、2か月分しか表示しない→表示が欠けても良しとする
-        //次月の計算
-        mm++;
-        if (mm>12) {
-            mm = 1;
-            yy++;
-        }
-        DrawSmallCalendar(yy, mm, RPostMonthCalendar[mode].x, RPostMonthCalendar[mode].y);
-//    }
 }
 
 /*
- * SlideSWStatusが、0/1はアラームオフ、2/3はオン
+ * SlideSWStatus: 0/1=Alarm off, 2/3=Alarm on
  */
 void drawAlarmTime(uint8_t mode, uint8_t *alarmtime) {
     char str[100];
     char ampm[][3] = {"AM", "PM"};
     int8_t ap;
-    //アラーム時刻の表示色
-
+    char pm;    //オンオフで+-切替
+    uint8_t idx = SlideSWStatus>>1;
+    
+    //アラーム時刻の表示色は、AlarmColorで設定
+    if (idx) pm = '+';
+    else pm = '-';
+    
     if (mode == DisplayMode3) {
         DrawAnalogClock(mode, DateTime, RTime[mode].x, RTime[mode].y, RTime[mode].xw, GREY);
-        if (alarmtime[1] >= 0x12) ap= 1 ;   //BCD
+        if (alarmtime[1] >= 0x12) ap= 1 ;   //BCDで12時以降なら午後
         else ap = 0;
-        if (SlideSWStatus>>1) 
-            sprintf(str, "Alarm+ %s %02d:%02x", ampm[ap], (alarmtime[1] & 0xf) + (alarmtime[1] >> 4)*10 -12*ap, alarmtime[0]);
-        else
-            sprintf(str, "Alarm- %s %02d:%02x", ampm[ap], (alarmtime[1] & 0xf) + (alarmtime[1] >> 4)*10 -12*ap, alarmtime[0]);
-        
-        display_drawChars(RAlarm[mode].x, RAlarm[mode].y, str, AlarmColor[SlideSWStatus>>1], BLACK, RAlarm[mode].font);
+        sprintf(str, "Alarm%c %s %02d:%02x", pm, ampm[ap], (alarmtime[1] & 0xf) + (alarmtime[1] >> 4)*10 -12*ap, alarmtime[0]);
     } else {
-        if (SlideSWStatus>>1) 
-            sprintf(str, "ALM+ %02x:%02x", alarmtime[1], alarmtime[0]);
-        else
-            sprintf(str, "ALM- %02x:%02x", alarmtime[1], alarmtime[0]);
-        
-        display_drawChars(RAlarm[mode].x, RAlarm[mode].y, str, AlarmColor[SlideSWStatus>>1], BLACK, RAlarm[mode].font);
-        
+        sprintf(str, "ALM%c %02x:%02x", pm, alarmtime[1], alarmtime[0]);
     }
+    display_drawChars(RAlarm[mode].x, RAlarm[mode].y, str, AlarmColor[idx], BLACK, RAlarm[mode].font);
 
 }
 
@@ -834,13 +770,12 @@ void drawDateTime(uint8_t mode, uint8_t *datetime) {
 }
 
 void drawTempHumidity(uint8_t mode, int16_t temp, int16_t humidity) {
-    char str1[50];
-    char str2[50];
+    char str[50];
 
-    sprintf(str1, "%2d.%1d\x87", temp / 10, temp % 10);
-    sprintf(str2, "%2d%%", humidity / 10);
-    display_drawChars(RTemp[mode].x, RTemp[mode].y, str1, WHITE, BLACK, RTemp[mode].font);
-    display_drawChars(RHumidity[mode].x, RHumidity[mode].y, str2, WHITE, BLACK, RHumidity[mode].font);
+    sprintf(str, "%2d.%1d\x87", temp / 10, temp % 10);
+    display_drawChars(RTemp[mode].x, RTemp[mode].y, str, WHITE, BLACK, RTemp[mode].font);
+    sprintf(str, "%2d%%", humidity / 10);
+    display_drawChars(RHumidity[mode].x, RHumidity[mode].y, str, WHITE, BLACK, RHumidity[mode].font);
 
 }
 
@@ -850,12 +785,8 @@ void drawTempHumidity(uint8_t mode, int16_t temp, int16_t humidity) {
 void drawCalendar(uint8_t mode) {
     switch (mode) {
         case DisplayMode2:
-            DrawBigCalendar(Bcd2Hex(DateTime[6]), Bcd2Hex(DateTime[5]), RThisMonthCalendar[mode].x, RThisMonthCalendar[mode].y);
+            DrawBigCalendar(Bcd2Hex(DateTime[6]), Bcd2Hex(DateTime[5]), MonthCalendar[mode].x, MonthCalendar[mode].y);
             break;
-        case DisplayMode3:
-//            DrawSmallCalendar(Bcd2Hex(DateTime[6]), Bcd2Hex(DateTime[5]), RThisMonthCalendar[mode].x, RThisMonthCalendar[mode].y);
-//
-//            break;
         default:
             Draw3month(Bcd2Hex(DateTime[6]), Bcd2Hex(DateTime[5]), mode);
     }

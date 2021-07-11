@@ -397,6 +397,12 @@ void NormalProc() {
 
     if (Mode == NormalInit) {
         lcd_fill(BLACK);
+        //ボタンの位置座標をモードに合わせて変更
+        ButtonObj3[BtnYear] = RYear[DisplayMode];
+        ButtonObj3[BtnMonth] = RMonth[DisplayMode];
+        ButtonObj3[BtnDay] = RDay[DisplayMode];
+        ButtonObj3[BtnTime] = RTime[DisplayMode];
+        ButtonObj3[BtnCalendar] = MonthCalendar[DisplayMode];
 
         //時刻表示は変化があった所だけ表示更新するので、BCDではありえない数値を設定しておく
         for (jj = 0; jj < 3; jj++) preDateTime[jj] = 0xff;
@@ -486,12 +492,13 @@ void NormalProc() {
     //タッチされた時の処理
     if (TouchStatus == 2) {
         TouchStatus++;
-        GetTouchLocation(&TouchX, &TouchY);
+        while (GetTouchLocation(&TouchX, &TouchY) == -1);
         TransCoordination(TouchX, TouchY, &Test_x, &Test_y);
 #ifdef DEBUG
-        sprintf(str, "Touch=(%4d, %4d) (%3d, %3d)", TouchX, TouchY, Test_x, Test_y);
-        display_drawChars(0, 150, str, WHITE, BLACK, 1);
+        sprintf(str, "T=%3d,%3d", Test_x, Test_y);
 #endif
+        sprintf(str, "T=(%4d,%4d)(%3d,%3d)", TouchX, TouchY, Test_x, Test_y);
+        display_drawChars(145, 25, str, WHITE, BLACK, 1);
         //アラーム中にタッチしたらスヌーズ
         if (AlarmStatus == 1) {
             AlarmSoundOff();
@@ -523,12 +530,6 @@ void NormalProc() {
             FirstDraw = 1;
             
             Mode = NormalInit;
-            //ボタンの位置座標をモードに合わせて変更
-            ButtonObj3[BtnYear] = RYear[DisplayMode];
-            ButtonObj3[BtnMonth] = RMonth[DisplayMode];
-            ButtonObj3[BtnDay] = RDay[DisplayMode];
-            ButtonObj3[BtnTime] = RTime[DisplayMode];
-            ButtonObj3[BtnCalendar] = RPrevMonthCalendar[DisplayMode];
             
         }
 
@@ -719,7 +720,7 @@ void SettingProc() {
     if (TouchStatus == 2) {
         TouchStatus++;
 //        display_drawChars(250, 160, "Touch ON", WHITE, BLACK, 1);
-        GetTouchLocation(&TouchX, &TouchY);
+        while (GetTouchLocation(&TouchX, &TouchY) == -1);
         TransCoordination(TouchX, TouchY, &Test_x, &Test_y);
 #ifdef DEBUG
         sprintf(str, "Touch=(%d, %d) (%5d, %5d)", TouchX, TouchY, Test_x, Test_y);
@@ -992,7 +993,7 @@ void TouchAdjMsg(uint8_t num) {
         color1 = GREY;
         color2 = WHITE;
     }
-    display_SetFont(font);
+    display_SetFont(NormalFont);
     sprintf(str, "1. Touch + at Up Left");
     display_drawChars(50, 100, str, color1, BLACK, 1);
     sprintf(str, "2. Touch + at Bottom Right");
@@ -1139,7 +1140,7 @@ void main(void) {
     __delay_ms(300);
     AlarmSoundOff();
     
-    display_SetFont(font);  //初期フォント設定
+    display_SetFont(NormalFont);  //初期フォント設定
     //初めて起動したときは、タッチの調整を実施し、そのデータをEEPROMに保持
     if (DATAEE_ReadByte(AddressInit) == 0xff) {
         TouchAdjust();

@@ -66,8 +66,8 @@ void ADC_Initialize(void)
     // TRIGSEL CCP5; NVCFG VSS; PVCFG VDD; 
     ADCON1 = 0x00;
     
-    // ADFM right; ACQT 20; ADCS FOSC/64; 
-    ADCON2 = 0xBE;
+    // ADFM right; ACQT 8; ADCS FOSC/64; 
+    ADCON2 = 0xA6;
     
     // ADRESL 0; 
     ADRESL = 0x00;

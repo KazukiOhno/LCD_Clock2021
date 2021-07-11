@@ -66,7 +66,7 @@ void GetTouchRawXY(uint16_t *tx, uint16_t *ty) {
  */
 int8_t GetTouchLocation(uint16_t *tx, uint16_t *ty) {
     int8_t jj;
-    uint8_t oversampling = 15;   //タッチ座標を7回取り込み平均化する
+    uint8_t oversampling = 15;   //タッチ座標を15回取り込み平均化する
     uint16_t sample_sumX;   //12bitデータなので、16回(=4bit)まで加算できる
     uint16_t sample_sumY;
     uint16_t samplesX[16], samplesY[16];    //oversamplingの数に合わせること
@@ -93,7 +93,7 @@ int8_t GetTouchLocation(uint16_t *tx, uint16_t *ty) {
         T_CS_SetHigh(); //CSをHighに
         //    SSP1ADD = 0x01; //8MHzに戻す
         SPI1_Close();
-    }
+    } else return -1;
 
     avg = sample_sumX / oversampling;
     num = oversampling;
