@@ -199,8 +199,6 @@ uint8_t TmpTime[7]; //設定途中の時刻を保持
 uint8_t AlarmTime[3] = {0, 0, 0x7f};
 uint8_t SmoothAlarmTime[3] = {0, 0, 0x7f};
 
-uint16_t AlarmColor[2];// = {0x4208, WHITE};   //0: SlideSW off時の色、1: on時の色
-// 0x4208;    //灰色
 uint8_t FirstDraw = 1;  // 表示モード変更後、最初の描画=1かどうか
 
 //uint8_t debug[2];

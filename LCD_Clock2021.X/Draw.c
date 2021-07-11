@@ -11,6 +11,8 @@
 #include "RTC8025.h"
 #include "LCD320x240color.h"
 
+uint16_t AlarmColor[2] = {0x4208, WHITE};   //0: SlideSW off時の色、1: on時の色
+// 0x4208;    //灰色
 
 // 絶対値を取得する関数マクロ定義
 #define ABS(x) ((x) < 0 ? -(x) : (x))
@@ -290,6 +292,27 @@ int16_t cosd(uint16_t theta) {
 #define ColorSec    RED
 #define ColorAlarm  YELLOW
 
+
+void drawAlarmNeedle(uint16_t *x, uint16_t *y, uint16_t color) {
+    int16_t xd, yd;
+    
+    //アラーム針を消す　ただし、最初の描画時は、ここをスキップ
+    display_drawLine(x[0], y[0], x[1], y[1], color);    //アラーム針
+    
+    xd = x[1]-x[0];
+    yd = y[1]-y[0];
+    if ( ABS(yd) > ABS(xd)) {
+        //角度により、移動する方向を変え、少し太くする
+        display_drawLine(x[0]+1, y[0], x[1]+1, y[1], color);
+        display_drawLine(x[0]-1, y[0], x[1]-1, y[1], color);
+    } else {
+        display_drawLine(x[0], y[0]-1, x[1], y[1]-1, color);
+        display_drawLine(x[0], y[0]+1, x[1], y[1]+1, color);
+    }
+}
+
+
+
 //アラーム針の長さは長針の75%
 //長針：分針の長さは、目盛の線より3ドット内側
 //短針
@@ -346,15 +369,7 @@ void DrawAnalogClock(uint8_t mode, uint8_t * datetime, uint16_t xx, uint16_t yy,
         //前と座標が変わっていない時は、消さない。最初の描画も同じ座標にしているので消去しない
     } else {
         if (!FirstDraw) {
-            //アラーム針を消す　ただし、最初の描画時は、ここをスキップ
-            display_drawLine(pax[0], pay[0], pax[1], pay[1], BLACK);    //アラーム針
-            if ( ABS(pay[1]-pay[0]) > ABS(pax[1]-pax[0])) {
-                display_drawLine(pax[0]+1, pay[0], pax[1]+1, pay[1], BLACK);
-                display_drawLine(pax[0]-1, pay[0], pax[1]-1, pay[1], BLACK);
-            } else {
-                display_drawLine(pax[0], pay[0]+1, pax[1], pay[1]+1, BLACK);
-                display_drawLine(pax[0], pay[0]-1, pax[1], pay[1]-1, BLACK);
-            }
+            drawAlarmNeedle(pax, pay, BLACK);
         }
         //描画用の座標を保存
         for (jj=0; jj<2; jj++) {
@@ -511,15 +526,7 @@ void DrawAnalogClock(uint8_t mode, uint8_t * datetime, uint16_t xx, uint16_t yy,
     
     //ここから、針の描画を実行
     //アラーム針描画------------------------------------------------------
-    display_drawLine(pax[0], pay[0], pax[1], pay[1], acolor);
-    if ( (pay[1]-pay[0]) > (pax[1]-pax[0])) {
-        //角度により、移動する方向を変え、少し太くする
-        display_drawLine(pax[0]+1, pay[0], pax[1]+1, pay[1], acolor);
-        display_drawLine(pax[0]-1, pay[0], pax[1]-1, pay[1], acolor);
-    } else {
-        display_drawLine(pax[0], pay[0]-1, pax[1], pay[1]-1, acolor);
-        display_drawLine(pax[0], pay[0]-1, pax[1], pay[1]-1, acolor);
-    }
+    drawAlarmNeedle(pax, pay, acolor);
 
     //時針の描画------------------------------------------------------
     display_fillTriangle(phx[1], phy[1], phx[2], phy[2], phx[3], phy[3], hcolor);
@@ -782,6 +789,7 @@ void drawAlarmTime(uint8_t mode, uint8_t *alarmtime) {
     char str[100];
     char ampm[][3] = {"AM", "PM"};
     int8_t ap;
+    //アラーム時刻の表示色
 
     if (mode == DisplayMode3) {
         DrawAnalogClock(mode, DateTime, RTime[mode].x, RTime[mode].y, RTime[mode].xw, GREY);

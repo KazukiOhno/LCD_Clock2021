@@ -253,34 +253,6 @@ void Timer5Handler() {
         }
     }
 
-    /*
-     * シリアルデータ受信
-     * これが呼び出されたら、LFまで構わずデータ取得
-     * エラーあれば中断
-     */
-    if (GetGPS == 1) {
-        //1行取得して、その処理が終わるまで、次のデータ取得させない
-        uint8_t rxData;
-        eusart1_status_t rxStatus;
-
-        while (EUSART1_is_rx_ready()) {
-            rxData = EUSART1_Read();
-            rxStatus = EUSART1_get_last_status();
-            if (rxStatus.ferr) return;
-            *BufferP = rxData;
-            BufferP++;
-            if (BufferP - Buffer > 95) {
-                BufferP = Buffer;
-                return;    //バッファがあふれるようならデータ破棄し、中断する   
-            }
-            if (rxData == 0x0a) {
-                //改行コード(0x0a=LF)が来たら、データ受信を終了し、フラグたてる
-                *BufferP = '\0';
-                GetGPS = 2;
-                return;
-            }
-        }
-    }
 }
 
 /*
@@ -393,6 +365,35 @@ void NormalProc() {
     int8_t mm, hh, jj;
     UINT actualLength;
     uint16_t newBL;
+
+    /*
+     * シリアルデータ受信
+     * これが呼び出されたら、LFまで構わずデータ取得
+     * エラーあれば中断
+     */
+    if (GetGPS == 1) {
+        //1行取得して、その処理が終わるまで、次のデータ取得させない
+        uint8_t rxData;
+        eusart1_status_t rxStatus;
+
+        while (EUSART1_is_rx_ready()) {
+            rxData = EUSART1_Read();
+            rxStatus = EUSART1_get_last_status();
+            if (rxStatus.ferr) return;
+            *BufferP = rxData;
+            BufferP++;
+            if (BufferP - Buffer > 95) {
+                BufferP = Buffer;
+                return;    //バッファがあふれるようならデータ破棄し、中断する   
+            }
+            if (rxData == 0x0a) {
+                //改行コード(0x0a=LF)が来たら、データ受信を終了し、フラグたてる
+                *BufferP = '\0';
+                GetGPS = 2;
+                return;
+            }
+        }
+    }
 
     if (Mode == NormalInit) {
         lcd_fill(BLACK);
@@ -1206,10 +1207,6 @@ void main(void) {
     }
     
     Mode = NormalInit;  //初期状態はノーマル
-
-    //アラーム時刻の表示色
-    AlarmColor[0] = 0x4208;
-    AlarmColor[1] = WHITE;   //0: SlideSW off時の色、1: on時の色
 
     //SDカード
     //例えば、気温ログを作る場合
