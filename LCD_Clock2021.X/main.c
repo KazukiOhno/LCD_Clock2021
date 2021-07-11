@@ -496,9 +496,9 @@ void NormalProc() {
         TransCoordination(TouchX, TouchY, &Test_x, &Test_y);
 #ifdef DEBUG
         sprintf(str, "T=%3d,%3d", Test_x, Test_y);
-#endif
         sprintf(str, "T=(%4d,%4d)(%3d,%3d)", TouchX, TouchY, Test_x, Test_y);
         display_drawChars(145, 25, str, WHITE, BLACK, 1);
+#endif
         //アラーム中にタッチしたらスヌーズ
         if (AlarmStatus == 1) {
             AlarmSoundOff();
