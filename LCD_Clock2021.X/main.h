@@ -201,9 +201,6 @@ char WeekDays[][4] = {
 
 //LCDŠÖŒW
 
-//‰·¼“xƒZƒ“ƒT
-int16_t Temp, Humidity;
-
 
 
 #ifdef	__cplusplus

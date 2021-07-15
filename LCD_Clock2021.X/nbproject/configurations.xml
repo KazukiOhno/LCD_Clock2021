@@ -16,7 +16,6 @@
         <logicalFolder name="fatfs" displayName="fatfs" projectFiles="true">
           <itemPath>mcc_generated_files/fatfs/integer.h</itemPath>
           <itemPath>mcc_generated_files/fatfs/ffconf.h</itemPath>
-          <itemPath>mcc_generated_files/fatfs/fatfs_demo.h</itemPath>
           <itemPath>mcc_generated_files/fatfs/ff.h</itemPath>
           <itemPath>mcc_generated_files/fatfs/diskio.h</itemPath>
         </logicalFolder>
@@ -73,7 +72,6 @@
           <itemPath>mcc_generated_files/examples/i2c2_master_example.c</itemPath>
         </logicalFolder>
         <logicalFolder name="fatfs" displayName="fatfs" projectFiles="true">
-          <itemPath>mcc_generated_files/fatfs/fatfs_demo.c</itemPath>
           <itemPath>mcc_generated_files/fatfs/ffsystem.c</itemPath>
           <itemPath>mcc_generated_files/fatfs/ff.c</itemPath>
           <itemPath>mcc_generated_files/fatfs/ff_time.c</itemPath>

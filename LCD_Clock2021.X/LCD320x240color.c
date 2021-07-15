@@ -1441,27 +1441,6 @@ void glcd_init(void)
 
 
 /*
- * LCDディスプレイの初期化
- */
-void glcd_init2(void)
-{
-  
-//    SPI1_ExchangeByte(0xff);
-    if (spi_master_open(LCD8M)) {
-        //ちゃんと開けたら
-        LCD_CS_SetHigh();    //CSをHighに
-        SPI1_ExchangeByte(0);
-        LCD_CS_SetLow();    //CSをLowに
-        write_command(0x11); //Sleep Out
-        __delay_ms(10); // It will be necessary to wait 5msec before sending next command
-        write_command(0x2c);
-        LCD_CS_SetHigh();    //CSをHighに
-        SPI1_Close();
-    }
-}
-
-
-/*
 void glcd_array(uint16_t x, uint16_t y, uint16_t xx, uint16_t yy,uint8_t *data)
 {
     uint16_t a, b;

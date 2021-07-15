@@ -54,12 +54,12 @@ void get_tempHumidity(int16_t *temp, int16_t *humidity) {
     //まずセンサを起こすため、ダミーリード
     I2C2_Read1ByteRegister(AM2320, 0);
     __delay_ms(1);
-    
+
     I2C2_WriteNBytes(AM2320, data, 3);
     __delay_ms(2);
     
     I2C2_ReadNBytes(AM2320, work, 8);
-    
+
     //エラーチェック
     CRC = work[6] + (work[7]<<8);
     error = crc16(work, 6);

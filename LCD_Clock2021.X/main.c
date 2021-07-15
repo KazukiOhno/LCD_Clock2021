@@ -155,6 +155,9 @@ uint8_t UpdateFlag = 0;
 #define UpdateDate          0x20
 #define UpdateMsg           0x80
 
+//温湿度センサ
+int16_t Temp, Humidity;
+
 uint8_t TouchCount;
 uint16_t TouchX, TouchY;
 uint16_t Test_x, Test_y;
@@ -162,7 +165,7 @@ uint16_t Test_x, Test_y;
 int8_t RotCount = 0; //回してクリックした回数
 int8_t Accel = 1;   //高速回転させた時に、倍速等
 
-uint16_t Brightness;
+uint16_t Brightness = 1023;
 uint16_t BackLight = 100;
 
 uint8_t AlarmStatus = 0;    //アラーム鳴動中は1にして、smooth処理などを行う
@@ -174,6 +177,10 @@ uint8_t GetGPS;     //電源投入時、1日1回くらいの取得必要になったら1にする
 //0: GPS取得停止、1:GPS取得中、2:1行分のデータ取得完了
 char Buffer[100];   //GPSとのシリアル通信用バッファ
 char * BufferP;     //バッファのデータ位置を示すポインタ
+
+#define GPS_Stop    0
+#define GPS_Start   1
+#define GPS_GotData 2
 
 //EEPROM内データ配置　　電源落ちた後、ここから設定情報読み出す
 #define AddressInit         0x00    //1バイト　　初期値FF、書き込んだら55
@@ -245,7 +252,7 @@ void Timer5Handler() {
             //きちんとLowレベル出たら(3回連続してLになった時=HLLL)
             Count1PPS++;
             if (Count1PPS == STABLE1PPS) {
-                GetGPS = 1;    //安定したら、GPSデータ取り込む
+                GetGPS = GPS_Start;    //安定したら、GPSデータ取り込み指定
                 BufferP = Buffer;   //初期値として、Bufferの先頭に設定
                 return;
             }
@@ -255,11 +262,30 @@ void Timer5Handler() {
 }
 
 /*
+ * Year/Month/Day/WeekdayをEEPROMに格納しておき、電池入れ替え後の変更の手間を省く
+ */
+void WriteYMD() {
+    int8_t jj;
+    char tmp[4];
+
+    //何回も書き換えをしないように、変化あった時だけにする
+    for (jj = 0; jj < 4; jj++) {
+        tmp[jj] = (unsigned)DATAEE_ReadByte(AddressYMD + jj);
+        if (tmp[jj] != DateTime[jj+3]) {
+            DATAEE_WriteByte(AddressYMD + jj, DateTime[jj+3]);
+            UpdateFlag |= UpdateDate;
+        }
+    }
+}
+
+
+/*
  * INTAをINT0割り込みで
  * 1秒ごとに割り込みが入るので、時刻の更新することを知らせるフラグ立てる
  */
 void RTC_handler() {
     UpdateFlag |= UpdateTime;
+
 }
 
 /*
@@ -315,24 +341,6 @@ void RotaryHandler() {
 
 
 /*
- * Year/Month/Day/WeekdayをEEPROMに格納しておき、電池入れ替え後の変更の手間を省く
- */
-void WriteYMD() {
-    int8_t jj;
-    char tmp[4];
-
-    //何回も書き換えをしないように、変化あった時だけにする
-    for (jj = 0; jj < 4; jj++) {
-        tmp[jj] = (unsigned)DATAEE_ReadByte(AddressYMD + jj);
-        if (tmp[jj] != DateTime[jj+3]) {
-            DATAEE_WriteByte(AddressYMD + jj, DateTime[jj+3]);
-            UpdateFlag |= UpdateDate;
-        }
-    }
-}
-
-
-/*
  * タッチした座標x,y(グラフィック座標に換算したもの)が、指定されたボタンの範囲に
  * 入っているかチェック
  * ボタンを押したと判定されると1を返す。それ以外は、0
@@ -363,14 +371,13 @@ void NormalProc() {
     int16_t delta;
     int8_t mm, hh, jj;
     UINT actualLength;
-    uint16_t newBL;
 
     /*
      * シリアルデータ受信
      * これが呼び出されたら、LFまで構わずデータ取得
      * エラーあれば中断
      */
-    if (GetGPS == 1) {
+    if (GetGPS == GPS_Start) {
         //1行取得して、その処理が終わるまで、次のデータ取得させない
         uint8_t rxData;
         eusart1_status_t rxStatus;
@@ -388,42 +395,29 @@ void NormalProc() {
             if (rxData == 0x0a) {
                 //改行コード(0x0a=LF)が来たら、データ受信を終了し、フラグたてる
                 *BufferP = '\0';
-                GetGPS = 2;
+                GetGPS = GPS_GotData;
                 return;
             }
         }
     }
 
-    if (Mode == NormalInit) {
-        lcd_fill(BLACK);
-        //ボタンの位置座標をモードに合わせて変更
-        ButtonObj3[BtnYear] = RYear[DisplayMode];
-        ButtonObj3[BtnMonth] = RMonth[DisplayMode];
-        ButtonObj3[BtnDay] = RDay[DisplayMode];
-        ButtonObj3[BtnTime] = RTime[DisplayMode];
-        ButtonObj3[BtnCalendar] = MonthCalendar[DisplayMode];
-
-        //時刻表示は変化があった所だけ表示更新するので、BCDではありえない数値を設定しておく
-        for (jj = 0; jj < 3; jj++) preDateTime[jj] = 0xff;
-
-        UpdateFlag |= UpdateTime | UpdateDate;
-        Mode++;
-    }
-    
     if (UpdateFlag & UpdateTime) {
         //日付、時刻の更新
         RTC_read(DateTime);
-
         drawDateTime(DisplayMode, DateTime);
-
         resetCTFG();
         EXT_INT0_InterruptFlagClear();
         WriteYMD(); //日付が変わったら、書き込んでおく
         UpdateFlag &= ~UpdateTime; //UpdateTimeをクリア
         
-        if ((DateTime[0] & 0x0f)==1) {
-            //10秒ごとに更新するように変更
-            //照度センサで、明るさを1秒ごとに取得する
+        if ((DateTime[0] & 0x0f) == 9) {
+            //温湿度は、10秒毎に更新
+            get_tempHumidity(&Temp, &Humidity);
+            drawTempHumidity(DisplayMode, Temp, Humidity);
+        }
+
+        if ((DateTime[0] & 0x0f) == 7) {
+            //照度センサで、明るさを10秒ごとに取得する
             //ADCの結果は、10bitの0-1023。明るいと大きな数値
             //ただし、暗いとADCの結果がかなりばらつく
             //昼間なら3.07V@3.29Vで、954-958、夜の蛍光灯下だと、50-150位だったか
@@ -432,34 +426,21 @@ void NormalProc() {
             Brightness = Brightness/8*7 + ADC_GetConversion(PhotoDiode);
             // Dutyを変更してバックライトの明るさを変更
             // Brightnessが一定数以上の時は、バックライトはほぼ常時点灯。
-            newBL = 100 + Brightness/8*3;
-            // BackLightは、最低100-max1000
-            if (newBL > 1000) newBL = 1000;
-            //変化が50以上起こらないように調整
-            if (BackLight > newBL+10) BackLight = BackLight -10;
-            else if (BackLight < newBL-10) BackLight = BackLight +10;
-            else BackLight = newBL;
+            BackLight = Brightness/8*3;
+            // BackLightは、最低0-max999
+            if (BackLight >= 1000) BackLight = 999;
             
             //輝度のレベルを表示 (デバッグ用)
             //        sprintf(str, "B=%4d", Brightness);
-//            sprintf(str, "B=%x", BackLight);
-//            display_drawChars(180, 20, str, WHITE, BLACK, 1);
+            sprintf(str, "B=%d", BackLight);
+            display_drawChars(170, 20, str, WHITE, BLACK, 1);
             //PWMは、10ビット (TMR6の周期=PR6=0xffに設定した時)
             EPWM1_LoadDutyValue(BackLight);
         }
         
-        if ((DateTime[0] & 0x0f) == 2) {
-            //温湿度は、10秒毎に更新
-            get_tempHumidity(&Temp, &Humidity);
-            drawTempHumidity(DisplayMode, Temp, Humidity);
-        }
-
-        /*
-         */
-        if (DateTime[0] == 8) {
-            //毎分、記録する
+        // SDカードに温湿度を毎分記録
+        if (DateTime[0] == 5) {
             //毎回、Mountすると、途中でSDカード抜き差ししても大丈夫なので、これで行く
-            //画面が白くなる現象は、f_writeした後、f_close時に発生
             if (f_mount(&drive,"0:",1) == FR_OK) {
                 if (f_open(&file, "TempLog.TXT", FA_WRITE | FA_OPEN_APPEND ) == FR_OK) { //Open or Create 追記
 //                    f_lseek(&file, 0);
@@ -469,25 +450,13 @@ void NormalProc() {
                     //日付時刻と気温を記録
                     sprintf(str, "%x/%x/%x %02x:%02x %d\r\n", DateTime[6], DateTime[5], DateTime[4], DateTime[2], DateTime[1], Temp);
                     f_write(&file, str, strlen(str), &actualLength);
-//                    f_sync(&file);
                     f_close(&file);
                 }
                 f_mount(0,"0:",0);  //unmount disk
-                glcd_init2();
             }
-
         }
     }
     
-    if (UpdateFlag & UpdateDate) {
-        //カレンダーを更新
-        drawCalendar(DisplayMode);
-        UpdateFlag &= ~UpdateDate; //UpdateDateをクリア
-
-        //日付が変わったら、再度GPS受信
-        if (Count1PPS >= STABLE1PPS) Count1PPS = 0;
-    }
-
     //タッチされた時の処理
     if (TouchStatus == 2) {
         TouchStatus++;
@@ -581,18 +550,46 @@ void NormalProc() {
         drawAlarmTime(DisplayMode, AlarmTime);
 
         //EEPROMに書き込むタイミングが問題。ロータリーをぐるぐる回している時は、
-        //何度もEEPROMに書き込みたくない
+        //何度もEEPROMにアラーム時刻を書き込みたくない
         //変化が一定時間(1分とか)なかったら書き込む感じにする
         
     }
     
     //GPSの状態: 受信中は赤、完了すると緑(電源投入後で受信前でも)
-    if (GetGPS >= 1) {
+    if (GetGPS >= GPS_Start) {
         display_fillCircle(7, 230, 3, RED);
     } else {
         display_fillCircle(7, 230, 3, GREEN);
     }
     
+    if (Mode == NormalInit) {
+        lcd_fill(BLACK);
+        //ボタンの位置座標をモードに合わせて変更
+        ButtonObj3[BtnYear] = RYear[DisplayMode];
+        ButtonObj3[BtnMonth] = RMonth[DisplayMode];
+        ButtonObj3[BtnDay] = RDay[DisplayMode];
+        ButtonObj3[BtnTime] = RTime[DisplayMode];
+        ButtonObj3[BtnCalendar] = MonthCalendar[DisplayMode];
+
+        //時刻表示は変化があった所だけ表示更新するので、BCDではありえない数値を設定しておく
+        for (jj = 0; jj < 3; jj++) preDateTime[jj] = 0xff;
+
+        get_tempHumidity(&Temp, &Humidity);
+        drawTempHumidity(DisplayMode, Temp, Humidity);
+    
+        UpdateFlag |= UpdateTime | UpdateDate;
+        Mode++;
+    }
+    
+    if (UpdateFlag & UpdateDate) {
+        //カレンダーを更新
+        drawCalendar(DisplayMode);
+        UpdateFlag &= ~UpdateDate; //UpdateDateをクリア
+
+        //日付が変わったら、再度GPS受信
+        if (Count1PPS >= STABLE1PPS) Count1PPS = 0;
+    }
+
 //    sprintf(str, "%d", Count1PPS);
 //    display_drawChars(15, 230, str, WHITE, BLACK, 1);
     
@@ -1079,7 +1076,7 @@ void TouchAdjust(void) {
 void main(void) {
     char str[100];
     uint8_t jj;
-    uint16_t x, y;
+//    uint16_t x, y;
 
     // Initialize the device
     SYSTEM_Initialize();
@@ -1102,7 +1099,7 @@ void main(void) {
     TouchStatus = 0;
     //GPSは、電源投入後、1PPS来たことを確認後、GPS受信動作を開始する
     Count1PPS = 0;
-    GetGPS = 0;
+    GetGPS = GPS_Stop;
 
     // RTCの初期化
     init_RTC(DateTime);
@@ -1144,20 +1141,22 @@ void main(void) {
     if (DATAEE_ReadByte(AddressInit) == 0xff) {
         TouchAdjust();
         lcd_fill(BLUE); //画面をクリア
+
         /*
-         //タッチが正常にできているか動作確認用
-            while (1) {
+        //タッチが正常にできているか動作確認用
+        while (1) {
+            if (TouchStatus != 0) {
                 uint16_t x, y, dx, dy;
-                if (TouchStatus != 0) {
-                    //描画してみる
-                    if (GetTouchLocation(&x, &y) != -1) {
-                        TransCoordination(x, y, &dx, &dy);
-                        lcd_draw_pixel_at(dx, dy, RED);
-    sprintf(str, "P1=(%4d, %4d) P2=(%3d, %3d)", x, y, dx, dy);
-    display_drawChars(0, 130, str, WHITE, BLACK, 1);
-                    }
+                //描画してみる
+                if (GetTouchLocation(&x, &y) != -1) {
+//                    TransCoordination(x, y, &dx, &dy);
+//                    lcd_draw_pixel_at(dx, dy, RED);
+//                    sprintf(str, "P1=(%4d, %4d) P2=(%3d, %3d)", x, y, dx, dy);
+                    sprintf(str, "P1=(%4d, %4d)", x, y);
+                    display_drawChars(0, 130, str, WHITE, BLACK, 1);
                 }
-            };
+            }
+        };
          */
         
         //タッチが機能しない時のデフォルト値
@@ -1224,9 +1223,6 @@ void main(void) {
     }
  */
     //2021/6/19 この状態では、割り込みを禁止する必要もない
-    //f_writeを実行すると、画面が真っ白になる
-    //f_writeせずに、Closeしても、画面が真っ白に
-    //結局、SDカードへの書き込み自体は問題なくできるので、SDカード関係の処理は、そのまま
     //LCD関連の処理に何らかの問題があるか、SDカードとインタフェース共有化の影響が出てしまっているものと解釈
     //SDカード側の配線が若干長いので、切替したつもりでも、何らかのバスファイトが発生とかが想定される。
     
@@ -1265,9 +1261,8 @@ void main(void) {
         f_mount(0,"0:",0);  //unmount disk
         //        SDCard_CS_SetHigh(); //最初の確認用　LEDを光らせて、書き込みOKを知らせる
     }
-//    glcd_init2();   // Sleep Outだけで、真っ白な画面は元に戻せた
  */    
-    
+
     while (1)
     {
         // Add your application code
@@ -1282,14 +1277,15 @@ void main(void) {
         SlideSWProc();
 
         //GPSからデータ1行取得できたら処理
-        if (GetGPS == 2) {
+        if (GetGPS == GPS_GotData) {
             //データをチェックして、RTCを設定
             if (GPRMCdatacheck()) {
-                GetGPS = 1;
+                //エラーの時は、データ取得やり直し
+                GetGPS = GPS_Start;
                 BufferP = Buffer;   //初期値として、Bufferの先頭に設定
             }
             else {
-                GetGPS = 0; //データ取得できたら0に
+                GetGPS = GPS_Stop; //データ取得できたら0に
             }
         }
 

@@ -119,7 +119,6 @@ FontStruct Font = {
 ////void glcd_str(uint16_t x , uint16_t y , char *str) ;
 
 void glcd_init(void) ; //LCD‰Šú‰»
-void glcd_init2(void) ; //LCD‰Šú‰»
 
 //***************************************************************************
 //void drawHLine(uint16_t x, uint16_t y, uint16_t w, uint16_t color);

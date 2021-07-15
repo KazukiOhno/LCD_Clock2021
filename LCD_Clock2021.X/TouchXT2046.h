@@ -17,7 +17,6 @@ extern "C" {
 uint16_t T_x1, T_y1, T_x2, T_y2;
 
 void GetTouchRawXY(uint16_t *tx, uint16_t *ty);
-void TouchAdjust(void);
 int8_t GetTouchLocation(uint16_t *tx, uint16_t *ty);
 void TransCoordination(uint16_t x, uint16_t y, uint16_t *xg, uint16_t *yg);
 

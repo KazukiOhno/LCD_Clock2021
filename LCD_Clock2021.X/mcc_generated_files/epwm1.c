@@ -55,7 +55,7 @@
   Section: Macro Declarations
 */
 
-#define PWM1_INITIALIZE_DUTY_VALUE    101
+#define PWM1_INITIALIZE_DUTY_VALUE    511
 
 /**
   Section: EPWM Module APIs
@@ -65,8 +65,8 @@ void EPWM1_Initialize(void)
 {
     // Set the EPWM1 to the options selected in the User Interface
 	
-	// CCP1M P1A,P1C: active low; P1B,P1D: active low; DC1B 1; P1M single; 
-	CCP1CON = 0x1F;    
+	// CCP1M P1A,P1C: active low; P1B,P1D: active low; DC1B 3; P1M single; 
+	CCP1CON = 0x3F;    
 	
 	// CCP1ASE operating; PSS1BD low; PSS1AC low; CCP1AS disabled; 
 	ECCP1AS = 0x00;    
@@ -80,8 +80,8 @@ void EPWM1_Initialize(void)
 	// CCPR1H 0; 
 	CCPR1H = 0x00;    
 	
-	// CCPR1L 25; 
-	CCPR1L = 0x19;    
+	// CCPR1L 127; 
+	CCPR1L = 0x7F;    
 
 	// Selecting Timer6
 	CCPTMRS0bits.C1TSEL = 0x2;
