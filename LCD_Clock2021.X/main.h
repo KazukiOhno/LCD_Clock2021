@@ -18,8 +18,6 @@ extern "C" {
 #define HHMMss  2
     
 
-uint8_t SlideSWStatus = 0x0f;   //どの状態でもない値を設定しておく
-
 //表示位置のリソース
 //表示モードによって、位置やサイズが変わるので、配列変数化して、プログラムしやすく
 #define TimeX       20
@@ -76,6 +74,7 @@ uint8_t SlideSWStatus = 0x0f;   //どの状態でもない値を設定しておく
 #define CalendarYw   80
 #define CalendarXstep  100
 
+//アナログ時計の座標は、時計の中心ざひょう
 #define AnalogClockX    100
 #define AnalogClockY    140
 #define AnalogClockR    90
@@ -165,16 +164,6 @@ rbox ButtonObj3[] = {
 };
 
 
-//タッチ処理用
-uint8_t TouchStatus = 0;
-//0: タッチしていない
-//1: タッチしなくなった直後の処理完了
-//2: タッチ短押し
-//3-4: タッチ短押し処理完了　カウントが100に行くまで、1-3のどれかの状態は維持
-//5: タッチ長押し
-//6-: タッチ長押し処理完了
-//タッチすると0になる
-
 //RTC処理用
 //Sec, Min, Hour, Wday, Day, Month, Yearを配列化
 //値は、BCD10進とすることに注意。先頭は、Secのレジスタアドレス
@@ -183,24 +172,6 @@ uint8_t TouchStatus = 0;
 uint8_t DateTime[7] = {0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x21};
 //時刻表示は、変化のあった所だけにするようにする
 uint8_t preDateTime[3]; //年月日を保持しておき、変化をチェックできるようにする
-
-//アラーム時刻、mm,hh, アラームが有効な曜日　RTCと同じ順序
-uint8_t TmpTime[7]; //設定途中の時刻を保持
-
-uint8_t AlarmTime[3] = {0, 0, 0x7f};    //mm, hh, wday
-uint8_t SmoothAlarmTime[3] = {0, 0, 0x7f};
-
-uint8_t FirstDraw = 1;  // 表示モード変更後、最初の描画=1かどうか
-
-//uint8_t debug[2];
-
-char WeekDays[][4] = {
-    "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat",
-//    "0x80", "0x81", "0x82", "0x83", "0x84", "0x85", "0x86",
-};
-
-//LCD関係
-
 
 
 #ifdef	__cplusplus

@@ -71,14 +71,14 @@ typedef union {
         uint8_t hi;
     };
 } COLOR;
-COLOR FrontColor = {0xffff};  //RGB (5-6-5ビット)
-COLOR BackColor = {0x0000};
-FontStruct Font = {
+
+FontStruct CurrentFont = {
   8,8,      //8x8 dot, normal font
   8,8,      //8x8 dot pitch
-  NormalFont      //ノーマルフォント
+  NormalFont,      //ノーマルフォント
+  0x20      //最初の文字コード
 };
-//uint8_t AccessSD = 0;   //SDカード処理中=1
+
 
 //SPI共有化させるため、使用時を明確化
 /*

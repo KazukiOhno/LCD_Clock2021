@@ -47,14 +47,13 @@ void GetTouchRawXY(uint16_t *tx, uint16_t *ty) {
     SPI1_ExchangeByte(0b11010011);
     SPI1_ReadBlock(data, 2);    //12ビット、2バイト相当を読み込む
     *ty = data[0];
-    *ty = (*ty << 4) + ((data[1] >> 4) & 0x0f);
+    *ty = (*ty << 4) + (data[1] >> 4);
     
     // Y-Position (今の使い方ではX座標)を取得
     SPI1_ExchangeByte(0b10010011);
-    SPI1_ReadBlock(data, 2);    //
+    SPI1_ReadBlock(data, 2);    //12ビット、2バイト相当を読み込む
     *tx = data[0];
-    *tx = (*tx << 4) + ((data[1] >> 4) & 0x0f);
-    
+    *tx = (*tx << 4) + (data[1] >> 4);
 }
 
 
@@ -76,25 +75,24 @@ int8_t GetTouchLocation(uint16_t *tx, uint16_t *ty) {
 
     if (T_IRQ_GetValue() != 0) return -1;
     
-    if (SPI1_Open(Touch2M)) {
-        //    SSP1ADD = 0x07; //2MHz　デフォルト設定8MHzにしているので、タッチ用に低速にする
-        T_CS_SetLow(); //タッチCSをLowに
-        
-        // x回測定し、平均取る
-        sample_sumX = 0;
-        sample_sumY = 0;
-        for (jj = 0; jj < oversampling; jj++) {
-            GetTouchRawXY(&samplesX[jj], &samplesY[jj]);
-            sample_sumX += samplesX[jj];
-            sample_sumY += samplesY[jj];
-        }
-        SPI1_ExchangeByte(0b10000000);  // PowerDownにして、IRQをEnabledにする
-        
-        T_CS_SetHigh(); //CSをHighに
-        //    SSP1ADD = 0x01; //8MHzに戻す
-        SPI1_Close();
-    } else return -1;
-
+    if (SPI1_Open(Touch2M_CONFIG) == false) return -1;
+    //    SSP1ADD = 0x07; //2MHz　デフォルト設定8MHzにしているので、タッチ用に低速にする
+    T_CS_SetLow(); //タッチCSをLowに
+    
+    // x回測定し、平均取る
+    sample_sumX = 0;
+    sample_sumY = 0;
+    for (jj = 0; jj < oversampling; jj++) {
+        GetTouchRawXY(&samplesX[jj], &samplesY[jj]);
+        sample_sumX += samplesX[jj];
+        sample_sumY += samplesY[jj];
+    }
+    SPI1_ExchangeByte(0b10000000);  // PowerDownにして、IRQをEnabledにする
+    
+    T_CS_SetHigh(); //CSをHighに
+    //    SSP1ADD = 0x01; //8MHzに戻す
+    SPI1_Close();
+    
     avg = sample_sumX / oversampling;
     num = oversampling;
     overrange = avg / 10;    //平均値の10%　　当初80にしていた
@@ -153,16 +151,16 @@ void TransCoordination(uint16_t x, uint16_t y, uint16_t *xg, uint16_t *yg) {
     }
 
     //以下の計算精度が問題
-    xx =  280 * ((int32_t)x - T_x1) ;
-    xx = xx/(T_x2 - T_x1) + 20;
-    if (xx<0) *xg = 0;
-    else if (xx>=320) *xg = 319;
+    xx =  (int32_t)x - T_x1;
+    xx = xx*300/(T_x2 - T_x1) + 20;
+    if (xx < 0) *xg = 0;
+    else if (xx >= 320) *xg = 319;
     else *xg = (uint16_t) xx;
     
     yy = (int32_t)y - T_y1;
     yy = yy*200/(T_y2 - T_y1) + 20;
     if (yy < 0) *yg = 0;
-    else if (yy>=240) *yg = 239;
+    else if (yy >= 240) *yg = 239;
     else *yg = (uint16_t) yy;
 
 }

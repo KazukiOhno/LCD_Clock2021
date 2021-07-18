@@ -127,16 +127,15 @@ const char HEX[] = "0123456789ABCDEF";
 #define NormalInit       0x00
 #define Normal           0x01
 #define Setting          0x10
-uint8_t Mode;
-
 #define SettingYear      0x11
 #define SettingMonth     0x12
 #define SettingDay       0x13
 #define SettingTime      0x14
 #define SettingCancel    0x15
 #define SettingOK        0x16
-
 #define SettingAlarmTime 0x17
+uint8_t Mode;
+
 
 #define AdjustTouch      0x20
 
@@ -155,8 +154,24 @@ uint8_t UpdateFlag = 0;
 #define UpdateDate          0x20
 #define UpdateMsg           0x80
 
+//アラーム時刻、mm,hh, アラームが有効な曜日　RTCと同じ順序
+uint8_t TmpTime[7]; //設定途中の時刻を保持
+
+uint8_t AlarmTime[3] = {0, 0, 0x7f};    //mm, hh, wday
+uint8_t SmoothAlarmTime[3] = {0, 0, 0x7f};
+
 //温湿度センサ
 int16_t Temp, Humidity;
+
+//タッチ処理用
+uint8_t TouchStatus = 0;
+//0: タッチしていない
+//1: タッチしなくなった直後の処理完了
+//2: タッチ短押し
+//3-4: タッチ短押し処理完了　カウントが100に行くまで、1-3のどれかの状態は維持
+//5: タッチ長押し
+//6-: タッチ長押し処理完了
+//タッチすると0になる
 
 uint8_t TouchCount;
 uint16_t TouchX, TouchY;
@@ -167,6 +182,8 @@ int8_t Accel = 1;   //高速回転させた時に、倍速等
 
 uint16_t Brightness = 1023;
 uint16_t BackLight = 100;
+
+uint8_t SlideSWStatus = 0x0f;   //どの状態でもない値を設定しておく
 
 uint8_t AlarmStatus = 0;    //アラーム鳴動中は1にして、smooth処理などを行う
 uint8_t SmoothCount = 0;    //何回スヌーズしたか
@@ -207,12 +224,6 @@ void Timer5Handler() {
     static uint8_t G1PPS_status = 0xff;
 
     //TouchStatus
-    //0: タッチしていない
-    //1: タッチしなくなった直後の処理完了
-    //2: タッチ短押し
-    //3-4: タッチ短押し処理完了　カウントが100に行くまで、1-3のどれかの状態は維持
-    //5: タッチ長押し
-    //6-: タッチ長押し処理完了
     touch_status = (unsigned)(touch_status << 1) | T_IRQ_GetValue();
     if ((touch_status & 0x07) == 0) {
         //3回連続タッチ(0)と感知したら
@@ -361,6 +372,12 @@ int8_t ButtonPush(uint16_t x, uint16_t y, uint8_t btn) {
     return 0;
 }
 
+void resetPreDateTime() {
+    int8_t jj;
+    
+    for (jj = 0; jj < 3; jj++) preDateTime[jj] = 0xff;
+}
+
 
 /*
  * 通常の処理
@@ -372,6 +389,21 @@ void NormalProc() {
     int8_t mm, hh, jj;
     UINT actualLength;
 
+    if (Mode == NormalInit) {
+        lcd_fill(BLACK);
+        //ボタンの位置座標をモードに合わせて変更
+        ButtonObj3[BtnCalendar] = MonthCalendar[DisplayMode];
+
+        //時刻表示は変化があった所だけ表示更新するので、BCDではありえない数値を設定しておく
+        resetPreDateTime();
+
+        get_tempHumidity(&Temp, &Humidity);
+        drawTempHumidity(DisplayMode, Temp, Humidity);
+    
+        UpdateFlag |= UpdateTime | UpdateDate;
+        Mode++; //To Normal
+    }
+    
     /*
      * シリアルデータ受信
      * これが呼び出されたら、LFまで構わずデータ取得
@@ -429,15 +461,17 @@ void NormalProc() {
             BackLight = Brightness/8*3;
             // BackLightは、最低0-max999
             if (BackLight >= 1000) BackLight = 999;
-            
+
+#ifdef DEBUG            
             //輝度のレベルを表示 (デバッグ用)
             //        sprintf(str, "B=%4d", Brightness);
             sprintf(str, "B=%d", BackLight);
             display_drawChars(170, 20, str, WHITE, BLACK, 1);
-            //PWMは、10ビット (TMR6の周期=PR6=0xffに設定した時)
+#endif
+            //PWMは、10ビットの解像度 (TMR6の周期=PR6=0xffに設定した時)
             EPWM1_LoadDutyValue(BackLight);
         }
-        
+
         // SDカードに温湿度を毎分記録
         if (DateTime[0] == 5) {
             //毎回、Mountすると、途中でSDカード抜き差ししても大丈夫なので、これで行く
@@ -495,7 +529,6 @@ void NormalProc() {
         if (ButtonPush(Test_x, Test_y, BtnCalendar)) {
             DisplayMode = (DisplayMode +1) % 3;
             DATAEE_WriteByte(AddressDisplayMode, DisplayMode);  //変更したら書込む
-            FirstDraw = 1;
             
             Mode = NormalInit;
             
@@ -514,7 +547,7 @@ void NormalProc() {
 
     } else if (TouchStatus == 0) {
 //        display_drawChars(250, 140, "TouchOFF", WHITE, BLACK, 1);
-        drawAlarmTime(DisplayMode, AlarmTime);
+        drawAlarmTime(DisplayMode, AlarmTime, SlideSWStatus);
         TouchStatus++;
     }
 
@@ -547,7 +580,7 @@ void NormalProc() {
         if (SlideSWStatus > 2) {
             RTC_setAlarmTime(AlarmTime);
         }
-        drawAlarmTime(DisplayMode, AlarmTime);
+        drawAlarmTime(DisplayMode, AlarmTime, SlideSWStatus);
 
         //EEPROMに書き込むタイミングが問題。ロータリーをぐるぐる回している時は、
         //何度もEEPROMにアラーム時刻を書き込みたくない
@@ -560,25 +593,6 @@ void NormalProc() {
         display_fillCircle(7, 230, 3, RED);
     } else {
         display_fillCircle(7, 230, 3, GREEN);
-    }
-    
-    if (Mode == NormalInit) {
-        lcd_fill(BLACK);
-        //ボタンの位置座標をモードに合わせて変更
-        ButtonObj3[BtnYear] = RYear[DisplayMode];
-        ButtonObj3[BtnMonth] = RMonth[DisplayMode];
-        ButtonObj3[BtnDay] = RDay[DisplayMode];
-        ButtonObj3[BtnTime] = RTime[DisplayMode];
-        ButtonObj3[BtnCalendar] = MonthCalendar[DisplayMode];
-
-        //時刻表示は変化があった所だけ表示更新するので、BCDではありえない数値を設定しておく
-        for (jj = 0; jj < 3; jj++) preDateTime[jj] = 0xff;
-
-        get_tempHumidity(&Temp, &Humidity);
-        drawTempHumidity(DisplayMode, Temp, Humidity);
-    
-        UpdateFlag |= UpdateTime | UpdateDate;
-        Mode++;
     }
     
     if (UpdateFlag & UpdateDate) {
@@ -644,7 +658,7 @@ const char ButtonName[][8] = {
  */
 uint8_t ButtonCheck(uint16_t x, uint16_t y) {
     uint8_t jj, kk;
-    uint8_t mode = Mode;
+    uint8_t mode;
 
     //どのボタンが押されたかチェック    
     for (jj = 0; jj< 6; jj++) {
@@ -657,20 +671,12 @@ uint8_t ButtonCheck(uint16_t x, uint16_t y) {
             //#define SettingCancel    0x15
             //#define SettingOK        0x16
             mode = SettingYear + jj;
-            for (kk = 0; kk < 3; kk++) preDateTime[kk] = 0xff;
+            resetPreDateTime();
             DrawSetBox(mode);
             break;
         }
     }
     
-    //タッチするごとに変更する対象を変える  旧バージョン
-/*
- *     Mode++;
-    if (Mode > SettingTime) Mode = SettingYear;
-    if ((Mode == SettingYear) || (Mode == SettingTime)) {
-        for (jj = 0; jj < 3; jj++) preDateTime[jj] = 0xff;
-    }
- */
     return mode;
 }
         
@@ -682,20 +688,31 @@ uint8_t ButtonCheck(uint16_t x, uint16_t y) {
 void SettingProc() {
     char str[100];
     int8_t delta, jj;
-    uint8_t SetOK = 0;
     int8_t yy, mo, dd, mm, hh;
     uint8_t y, m, d;
     static uint8_t changeTime;
 
     if (Mode == Setting) {
         //このモードに移行した時に初期化する
-        lcd_fill(BLACK); //画面をクリア(真っ黒)
-
+        lcd_fill(BLACK); //画面をクリア(黒)
+        
+        //ボタンの位置座標をモードに合わせて変更
+        ButtonObj3[BtnYear] = RYear[DisplayMode];
+        ButtonObj3[BtnMonth] = RMonth[DisplayMode];
+        ButtonObj3[BtnDay] = RDay[DisplayMode];
+        ButtonObj3[BtnTime] = RTime[DisplayMode];
+        //アナログ時計のボックスの座標を調整
+        if (DisplayMode == DisplayMode3) {
+            ButtonObj3[BtnTime].x = AnalogClockX - AnalogClockR;
+            ButtonObj3[BtnTime].y = AnalogClockY - AnalogClockR;
+            ButtonObj3[BtnTime].xw = AnalogClockR *2;
+            ButtonObj3[BtnTime].yw = AnalogClockR *2;
+        }
+        
         Mode = SettingTime;
         for (jj = 0; jj < 7; jj++) TmpTime[jj] = DateTime[jj];
         changeTime = 0;
-        //こうしておかないと描画されない
-        for (jj = 0; jj < 3; jj++) preDateTime[jj] = 0xff;
+        resetPreDateTime();        //こうしておかないと描画されない
         //画面書き換え
         DrawSetBox(Mode);
 
@@ -705,8 +722,6 @@ void SettingProc() {
             //ボタンの中央にテキスト表示
             uint16_t xp = ButtonObj3[jj].x + ButtonObj3[jj].xw/2 - strlen(ButtonName[jj])*4*(jj-3);
             uint16_t yp = ButtonObj3[jj].y + ButtonObj3[jj].yw/2 - 4*(jj-3);
-//            uint16_t xp = ButtonObj3[jj].x+10;//メモリ節約のため、計算簡略化
-//            uint16_t yp = ButtonObj3[jj].y+10;//
             display_drawChars(xp, yp, (char *) ButtonName[jj], WHITE, BLACK, jj-3);
         }
         
@@ -719,7 +734,7 @@ void SettingProc() {
         while (GetTouchLocation(&TouchX, &TouchY) == -1);
         TransCoordination(TouchX, TouchY, &Test_x, &Test_y);
 #ifdef DEBUG
-        sprintf(str, "Touch=(%d, %d) (%5d, %5d)", TouchX, TouchY, Test_x, Test_y);
+        sprintf(str, "Touch=(%04d, %04d) (%03d, %03d)", TouchX, TouchY, Test_x, Test_y);
         display_drawChars(0, 150, str, WHITE, BLACK, 1);
         display_drawRoundRect(Test_x, Test_y, 3, 3, 3, WHITE);
 #endif
@@ -780,7 +795,6 @@ void SettingProc() {
             TmpTime[2] = Hex2Bcd(hh);
 
             drawTime(DisplayMode, TmpTime, RED);
-//            DispTime(HHMM, TmpTime, RTime[DisplayMode].x, RTime[DisplayMode].y, RTime[DisplayMode].font, RED);
             changeTime = 1; //時刻を変更したら1
         } else if (Mode >= SettingYear && Mode <= SettingDay) {
             yy = Bcd2Hex(TmpTime[6]);
@@ -823,7 +837,7 @@ void SlideSWProc() {
     
     if (SlideSWStatus == 2) {
         // SWをオンにした直後の処理
-        drawAlarmTime(DisplayMode, AlarmTime);
+        drawAlarmTime(DisplayMode, AlarmTime, SlideSWStatus);
         AlarmStatus = 0;
         RTC_setAlarmTime(AlarmTime);
 
@@ -838,7 +852,7 @@ void SlideSWProc() {
         AlarmSoundOff();
         AlarmStatus = 0;
         RTC_resetAlarm();
-        drawAlarmTime(DisplayMode, AlarmTime);
+        drawAlarmTime(DisplayMode, AlarmTime, SlideSWStatus);
         SlideSWStatus++; //スライドSWオフの処理完了したら1
         SmoothCount = 0;
     }
@@ -1002,7 +1016,6 @@ void TouchAdjMsg(uint8_t num) {
 void TouchAdjust(void) {
     uint8_t count, kk;
     char str[100];
-    int8_t result;
 
     //左上の十字
     display_drawLine(17, 20, 23, 20, WHITE);
@@ -1016,11 +1029,8 @@ void TouchAdjust(void) {
         if (TouchStatus == 2) {
             if (count == 0) {
                 // 1回目のタッチの位置
-                for (kk=0; kk<2; kk++) {
-                    do {
-                        result = GetTouchLocation(&T_x1, &T_y1);
-                    } while (result == -1);
-                }
+                while (GetTouchLocation(&T_x1, &T_y1) == -1);
+                
                 //タッチしたらピッという音を出す
                 AlarmSoundOn(0);
                 __delay_ms(100);
@@ -1040,20 +1050,17 @@ void TouchAdjust(void) {
             } else {
                 int16_t dx, dy;
                 // 2回目のタッチ
-                do {
-                    for (kk=0; kk<2; kk++) {
-                        do {
-                            result = GetTouchLocation(&T_x2, &T_y2);
-                        } while (result == -1);
-                    }
+//                do {
+                    while (GetTouchLocation(&T_x2, &T_y2) == -1);
                     //タッチしている位置がおかしいと思える場合を排除
                     if (T_x1 > T_x2) dx = T_x1 - T_x2;
                     else dx = T_x2 - T_x1;
                     if (T_y1 > T_y2) dy = T_y1 - T_y2;
                     else dy = T_y2 - T_y1;
-                } while ((dx < 1000) || (dy < 1000));
+//                } while ((dx < 1000) || (dy < 1000));
+//                } while ((dx < 100) || (dy < 100));
 #ifdef DEBUG
-                sprintf(str, "P1=(%d, %d) P2=(%d, %d)", T_x1, T_y1, T_x2, T_y2);
+                sprintf(str, "P1=(%d, %d) P2=(%x, %x)", T_x1, T_y1, T_x2, T_y2);
                 display_drawChars(0, 140, str, WHITE, BLACK, 1);
 //                for (int8_t dd=0; dd<50; dd++) __delay_ms(1000);
 #endif
@@ -1140,7 +1147,7 @@ void main(void) {
     //初めて起動したときは、タッチの調整を実施し、そのデータをEEPROMに保持
     if (DATAEE_ReadByte(AddressInit) == 0xff) {
         TouchAdjust();
-        lcd_fill(BLUE); //画面をクリア
+        lcd_fill(BLACK); //画面をクリア
 
         /*
         //タッチが正常にできているか動作確認用
@@ -1149,11 +1156,12 @@ void main(void) {
                 uint16_t x, y, dx, dy;
                 //描画してみる
                 if (GetTouchLocation(&x, &y) != -1) {
-//                    TransCoordination(x, y, &dx, &dy);
-//                    lcd_draw_pixel_at(dx, dy, RED);
-//                    sprintf(str, "P1=(%4d, %4d) P2=(%3d, %3d)", x, y, dx, dy);
-                    sprintf(str, "P1=(%4d, %4d)", x, y);
-                    display_drawChars(0, 130, str, WHITE, BLACK, 1);
+                    TransCoordination(x, y, &dx, &dy);
+                    display_drawLine(dx, dy, dx, dy, WHITE);
+                    sprintf(str, "P=(%4d, %4d) (%3d, %3d)", x, y, dx, dy);
+                    display_drawChars(0, 0, str, WHITE, BLACK, 1);
+                    sprintf(str, "(%4d, %4d) (%4d, %4d)", T_x1, T_y1, T_x2, T_y2);
+                    display_drawChars(0, 10, str, WHITE, BLACK, 1);
                 }
             }
         };
@@ -1222,9 +1230,6 @@ void main(void) {
         return;
     }
  */
-    //2021/6/19 この状態では、割り込みを禁止する必要もない
-    //LCD関連の処理に何らかの問題があるか、SDカードとインタフェース共有化の影響が出てしまっているものと解釈
-    //SDカード側の配線が若干長いので、切替したつもりでも、何らかのバスファイトが発生とかが想定される。
     
 /*
     sprintf(str, "Initializing ...\r\n");
@@ -1272,7 +1277,7 @@ void main(void) {
 #endif
         if (Mode <= Normal) NormalProc();
         else if (Mode & Setting) SettingProc();
-        
+
         //スライドSW
         SlideSWProc();
 

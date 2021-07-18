@@ -31,7 +31,8 @@
 // 絶対値を取得する関数マクロ定義
 #define ABS(x) ((x) < 0 ? -(x) : (x))
 
-uint16_t global_bg_color = BLACK;
+COLOR FrontColor = {0xffff};  //RGB (5-6-5ビット)
+COLOR BackColor = {0x0000};
 
 int16_t
   Cursor_x = 0,          ///< x location to start print()ing text
@@ -43,7 +44,6 @@ uint8_t
   Textsize = 1;          ///< Desired magnification of text to print()
 bool
   wrap = true;           ///< If set, 'wrap' text at right edge of display
-
 
 // Prototype
 void display_drawCircleHelper(uint16_t x0, uint16_t y0, uint16_t r, uint8_t cornername, uint16_t color);
@@ -57,16 +57,10 @@ void display_fillCircleHelper(uint16_t x0, uint16_t y0, uint16_t r,
  */
 void write_command(uint8_t cmd) {
     LCD_DCRS_SetLow();  //コマンドモード
-//    if (AccessSD) return;
-//    LCD_CS_SetHigh();    //CSをHighに
-//    SPI1_ExchangeByte(0x00);
-//    SPI1_ExchangeByte(0x00);
-//    LCD_CS_SetLow();    //CSをLowに
     SPI1_ExchangeByte(cmd);
 }
  void write_data(uint8_t data) {
     LCD_DCRS_SetHigh();  //データモード
-//    if (AccessSD) return;
     SPI1_ExchangeByte(data);
 }
 
@@ -102,7 +96,7 @@ void display_setTextSize(uint8_t s) {
 // 4つの引数はすべて画面上の座標
 void addset(uint16_t x, uint16_t y, uint16_t xx, uint16_t yy) {
     
-    if (spi_master_open(LCD8M)) {
+    if (SPI1_Open(LCD8M_CONFIG)) {
         //ちゃんと開けたら
         LCD_CS_SetLow();    //CSをLowに
         
@@ -136,7 +130,7 @@ uint8_t lcd_set_cursor_x(uint16_t x) {
     uint8_t hi = x >>8;
     uint8_t lo = x & 0xff;
 
-    if (spi_master_open(LCD8M)) {
+    if (SPI1_Open(LCD8M_CONFIG)) {
         //ちゃんと開けたら
         LCD_CS_SetLow();    //CSをLowに
         write_command(0x2A);    //Column Address Set
@@ -163,7 +157,7 @@ uint8_t lcd_set_cursor_y(uint16_t y) {
     uint8_t hi = y >>8;
     uint8_t lo = y & 0xff;
     
-    if (spi_master_open(LCD8M)) {
+    if (SPI1_Open(LCD8M_CONFIG)) {
         //ちゃんと開けたら
         LCD_CS_SetLow();    //CSをLowに
         write_command(0x2B);    // Page Address Set
@@ -220,7 +214,7 @@ uint16_t display_getCursorY(void) {
  */
 uint8_t draw_pixel(uint16_t color) {
 
-    if (spi_master_open(LCD8M)) {
+    if (SPI1_Open(LCD8M_CONFIG)) {
         //ちゃんと開けたら
         LCD_CS_SetLow();    //CSをLowに
         write_data(color >>8);
@@ -246,20 +240,20 @@ void lcd_draw_pixel_at(uint16_t x, uint16_t y, uint16_t color) {
  * フォント設定
  */
 void display_SetFont(const uint8_t *font) {
-    Font.xsize = font[Fxsize];
-    Font.ysize = font[Fysize];
-    Font.xpitch = Font.xsize;   //ピッチは、デフォルトでsizeと同じ
-    Font.ypitch = Font.ysize;
-    Font.font = font;
-    Font.offset = font[Foffset];    
+    CurrentFont.xsize = font[Fxsize];
+    CurrentFont.ysize = font[Fysize];
+    CurrentFont.xpitch = CurrentFont.xsize;   //ピッチは、デフォルトでsizeと同じ
+    CurrentFont.ypitch = CurrentFont.ysize;
+    CurrentFont.font = font;
+    CurrentFont.offset = font[Foffset];    
 }
 
 /*
  * フォントのピッチを変更したい時に使う
  */
 void display_SetFontPitch(uint8_t xp, uint8_t yp) {
-    Font.xpitch = xp;
-    Font.ypitch = yp;
+    CurrentFont.xpitch = xp;
+    CurrentFont.ypitch = yp;
     
 }
 
@@ -279,8 +273,8 @@ void display_putc(char c) {
     uint8_t i, j;
     uint8_t textsizeX, textsizeY, pitchX, pitchY;
 
-    uint8_t fontXsize = Font.xsize;
-    uint8_t fontYsize = Font.ysize;
+    uint8_t fontXsize = CurrentFont.xsize;
+    uint8_t fontYsize = CurrentFont.ysize;
 
     if (Textsize < 0x10) {  //2桁でない時は、X,Y同倍率
         textsizeX = Textsize;
@@ -290,8 +284,8 @@ void display_putc(char c) {
         textsizeY = Textsize & 0x0f;
     }
     
-    pitchX = Font.xpitch * textsizeX;
-    pitchY = Font.ypitch * textsizeY;
+    pitchX = CurrentFont.xpitch * textsizeX;
+    pitchY = CurrentFont.ypitch * textsizeY;
 
     if (c == ' ' && Cursor_x == 0 && wrap)  //行の先頭の空白は削除
         return;
@@ -305,7 +299,7 @@ void display_putc(char c) {
     }
 
     for(i = 0; i < fontXsize; i++ ) {
-        uint8_t line = Font.font[8+ fontXsize * (c - Font.offset) + i];  //8は、フォントデータの前の8バイト分の情報分
+        uint8_t line = CurrentFont.font[8+ fontXsize * (c - CurrentFont.offset) + i];  //8は、フォントデータの前の8バイト分の情報分
         if (c == ' ') line = 0;
         for(j = 0; j < fontYsize; j++, line >>= 1) {
             if (line & 1) {
@@ -385,7 +379,7 @@ void lcd_fill(uint16_t bg_color) {
 
     addset(0, 0, width, height); //これで描画範囲を制限する
 
-    if (spi_master_open(LCD8M)) {
+    if (SPI1_Open(LCD8M_CONFIG)) {
         //ちゃんと開けたら
         LCD_CS_SetLow();    //CSをLowに
         while (height--) {
@@ -415,7 +409,7 @@ void drawHLine(uint16_t x, uint16_t y, uint16_t w, uint16_t color) {
 
         if ((x + w - 1) >= LCD_WIDTH) w = LCD_WIDTH  - x;
         addset(x, y,  x + w-1, y);
-        if (spi_master_open(LCD8M)) {
+        if (SPI1_Open(LCD8M_CONFIG)) {
             //ちゃんと開けたら
             LCD_CS_SetLow();    //CSをLowに
             while (w--) {
@@ -442,7 +436,7 @@ void drawVLine(uint16_t x, uint16_t y, uint16_t h, uint16_t color) {
 
         if ((y + h - 1) >= LCD_WIDTH) h = LCD_WIDTH - y;
         addset(x, y, x, y+h-1);
-        if (spi_master_open(LCD8M)) {
+        if (SPI1_Open(LCD8M_CONFIG)) {
             //ちゃんと開けたら
             LCD_CS_SetLow();    //CSをLowに
             while (h--) {
@@ -557,7 +551,7 @@ void lcd_fill_rect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t 
 
     addset(x0, y0, x1, y1); //これで描画範囲を制限する
 
-    if (spi_master_open(LCD8M)) {
+    if (SPI1_Open(LCD8M_CONFIG)) {
         //ちゃんと開けたら
         LCD_CS_SetLow();    //CSをLowに
         jj=0;
@@ -1302,7 +1296,7 @@ void glcd_init(void)
     LCD_RESET_SetHigh();
     __delay_ms(15); // >5ms
     
-    if (spi_master_open(LCD8M)) {
+    if (SPI1_Open(LCD8M_CONFIG)) {
         //ちゃんと開けたら
         LCD_CS_SetLow();    //CSをLowに
         

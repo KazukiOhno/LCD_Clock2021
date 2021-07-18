@@ -20,7 +20,7 @@ void DrawBigCalendar(uint8_t year, uint8_t month, uint16_t xs, uint16_t ys);
 void DrawSmallCalendar(uint8_t year, uint8_t month, uint16_t xs, uint16_t ys);
 void Draw3month(uint8_t startyear, uint8_t startmonth, uint8_t mode);
 
-void drawAlarmTime(uint8_t mode, uint8_t *alarmtime);
+void drawAlarmTime(uint8_t mode, uint8_t *alarmtime, uint8_t sw);
 void drawTime(uint8_t mode, uint8_t * datetime, uint16_t color);
 void drawDateTime(uint8_t mode, uint8_t *datetime);
 void drawTempHumidity(uint8_t mode, int16_t temp, int16_t humidity);

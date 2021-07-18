@@ -100,8 +100,8 @@
    </usedClasses>
    <usedLibraries class="java.util.ArrayList">
       <ILibraryFile class="com.microchip.mcc.core.library.BaseLibraryFile" libraryClass="com.microchip.mcc.mcu8.Mcu8PeripheralLibrary" version="1.81.7"/>
-      <ILibraryFile class="com.microchip.mcc.core.library.BaseLibraryFile" libraryClass="com.microchip.mcc.sdcard.SDCardLibrary" version="1.1.0"/>
       <ILibraryFile class="com.microchip.mcc.core.library.BaseLibraryFile" libraryClass="com.microchip.mcc.fatfs.FatFsLibrary" version="1.1.0"/>
+      <ILibraryFile class="com.microchip.mcc.core.library.BaseLibraryFile" libraryClass="com.microchip.mcc.sdcard.SDCardLibrary" version="1.1.0"/>
       <ILibraryFile class="com.microchip.mcc.core.library.BaseLibraryFile" libraryClass="com.microchip.mcc.foundationservices.library.FoundationServicesLibrary" version="0.2.2"/>
    </usedLibraries>
    <tokenMap class="java.util.TreeMap">
@@ -2935,7 +2935,7 @@
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="MSSP1" name="tmr2PeriodValue"/>
-         <value>0.000016</value>
+         <value>0.000256</value>
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.OptionKey" moduleName="MSSP1" registerAlias="SSPCON1" settingAlias="CKP" alias="Idle:High, Active:Low"/>
@@ -3591,7 +3591,7 @@
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="MSSP2" name="tmr2PeriodValue"/>
-         <value>0.000016</value>
+         <value>0.000256</value>
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.OptionKey" moduleName="MSSP2" registerAlias="SSPCON1" settingAlias="CKP" alias="Idle:High, Active:Low"/>
@@ -4658,7 +4658,7 @@
          <value>PDIP28</value>
       </entry>
       <entry>
-         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="Pin Module" name="straPin%aux0"/>
+         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="Pin Module" name="straPin%aux1"/>
          <value>PORTB3</value>
       </entry>
       <entry>
@@ -5411,7 +5411,7 @@
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.RegisterKey" moduleName="Pin Module" registerAlias="LATC"/>
-         <value>4</value>
+         <value>12</value>
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.RegisterKey" moduleName="Pin Module" registerAlias="TRISA"/>
@@ -5595,7 +5595,7 @@
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.SettingKey" moduleName="Pin Module" registerAlias="LATC" settingAlias="LATC3"/>
-         <value>clear</value>
+         <value>set</value>
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.SettingKey" moduleName="Pin Module" registerAlias="LATC" settingAlias="LATC4"/>
@@ -5899,11 +5899,11 @@
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="SPIMASTER" name="pubSubSPIMASTERConfigurations"/>
-         <value>810.2199719257352</value>
+         <value>5665.665838007566</value>
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="SPIMASTER" name="pubSubspiSubscriber"/>
-         <value>4688.812575802454</value>
+         <value>4311.620152471024</value>
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="SPIMASTER" name="spiSubscriber"/>
@@ -5915,7 +5915,7 @@
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="SPIMASTER" name="validate"/>
-         <value>0.4543168985778937</value>
+         <value>0.0810335520847314</value>
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.PropertyTokenKey" moduleName="SPIMASTER" name="spiConfigurations%0%dataInputSample"/>
@@ -8152,12 +8152,12 @@
          <hash>7fede0407390286b4b61ecba7f2bfeaf38e06673dd8ce7e046e3dec3befc50ea</hash>
       </entry>
       <entry>
-         <file>mcc_generated_files\device_config.h</file>
-         <hash>37ec1c002eb89eaf0a85b2f634d19965c258d83451b741ed6e65c4166b32f66c</hash>
-      </entry>
-      <entry>
          <file>mcc_generated_files\tmr5.h</file>
          <hash>dc08f524520caced2e76afa73eef8ebf8851ababb7088a8e1895784be508c565</hash>
+      </entry>
+      <entry>
+         <file>mcc_generated_files\device_config.h</file>
+         <hash>37ec1c002eb89eaf0a85b2f634d19965c258d83451b741ed6e65c4166b32f66c</hash>
       </entry>
       <entry>
          <file>mcc_generated_files\fatfs\ff.h</file>
@@ -8192,12 +8192,12 @@
          <hash>12906c77c9bc1c44381a6be1ed06c779d42d740e501f79d8fd41da0c7b2d5361</hash>
       </entry>
       <entry>
-         <file>mcc_generated_files\epwm2.h</file>
-         <hash>d173bffa4b65452faee4481677cbbd438c68796ede22cb7a240e7834b4dd4173</hash>
-      </entry>
-      <entry>
          <file>mcc_generated_files\tmr1.c</file>
          <hash>5c0c5e4e74d5a0db5749894a007e7a13cbeae5385a5f0de3855eed1554c45057</hash>
+      </entry>
+      <entry>
+         <file>mcc_generated_files\epwm2.h</file>
+         <hash>d173bffa4b65452faee4481677cbbd438c68796ede22cb7a240e7834b4dd4173</hash>
       </entry>
       <entry>
          <file>mcc_generated_files\tmr3.c</file>
@@ -8205,7 +8205,7 @@
       </entry>
       <entry>
          <file>mcc_generated_files\pin_manager.c</file>
-         <hash>d0bd8e36cfc87a82b152d2fe77316113b70ec15dfa472f313260993794047f37</hash>
+         <hash>4c4e004b1dcd47001693672fdb059112e30c5c17e1d51caa3214552870fb3ced</hash>
       </entry>
       <entry>
          <file>mcc_generated_files\fatfs\diskio.c</file>
@@ -8236,12 +8236,12 @@
          <hash>9abd55ef008afed7a5330d4d276ea41b89a27933e7fef613c5a05671c577ee15</hash>
       </entry>
       <entry>
-         <file>mcc_generated_files\sd_spi\sd_spi.h</file>
-         <hash>7bf2730d6b6763db5ad7ebae1942ca6da4b857f9e1f47c16ec741625edf077ba</hash>
-      </entry>
-      <entry>
          <file>mcc_generated_files\memory.c</file>
          <hash>37265d0acd0335f7d2c3f2f419965580558c61e02821bfb04a597009ff9088cb</hash>
+      </entry>
+      <entry>
+         <file>mcc_generated_files\sd_spi\sd_spi.h</file>
+         <hash>7bf2730d6b6763db5ad7ebae1942ca6da4b857f9e1f47c16ec741625edf077ba</hash>
       </entry>
       <entry>
          <file>mcc_generated_files\eusart1.h</file>
@@ -8280,12 +8280,12 @@
          <hash>b09bdf54e6f4811afe07c5870dde0492beec3b217708a2bd0e757ad8528e9c61</hash>
       </entry>
       <entry>
-         <file>mcc_generated_files\tmr0.h</file>
-         <hash>7be332b3987197671a9d3a56fc1e324ad58c00b198b1bdcbdd2cf6ad99c22259</hash>
-      </entry>
-      <entry>
          <file>mcc_generated_files\fatfs\ff_time.c</file>
          <hash>ada0bf61f3a07af56084695eb722bc2e764c06c2feee7622f0d5327b52127eb0</hash>
+      </entry>
+      <entry>
+         <file>mcc_generated_files\tmr0.h</file>
+         <hash>7be332b3987197671a9d3a56fc1e324ad58c00b198b1bdcbdd2cf6ad99c22259</hash>
       </entry>
       <entry>
          <file>main.c</file>
@@ -8312,12 +8312,12 @@
          <hash>3c89b2ace22f4345b34113a864fe52e4c9be6adece42c64408a887084e6ab3c8</hash>
       </entry>
       <entry>
-         <file>mcc_generated_files\epwm1.h</file>
-         <hash>ff7bd77bd28c7af404341f38aeae7a495fd455426b61ae9070cf915e2bd22405</hash>
-      </entry>
-      <entry>
          <file>mcc_generated_files\tmr0.c</file>
          <hash>c5913a5bc1b2e93b5cf61624c874402de3547e4f98a13e855a673125216bdf96</hash>
+      </entry>
+      <entry>
+         <file>mcc_generated_files\epwm1.h</file>
+         <hash>ff7bd77bd28c7af404341f38aeae7a495fd455426b61ae9070cf915e2bd22405</hash>
       </entry>
       <entry>
          <file>mcc_generated_files\examples\i2c2_master_example.h</file>

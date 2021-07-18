@@ -11,6 +11,11 @@
 #include "RTC8025.h"
 #include "LCD320x240color.h"
 
+char WeekDays[][4] = {
+    "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat",
+//    "0x80", "0x81", "0x82", "0x83", "0x84", "0x85", "0x86",
+};
+
 uint16_t AlarmColor[2] = {0x4208, WHITE};   //0: SlideSW off時の色、1: on時の色
 // 0x4208;    //灰色
 
@@ -337,6 +342,7 @@ void DrawAnalogClock(uint8_t mode, uint8_t * datetime, uint16_t xx, uint16_t yy,
     uint16_t hcolor, mcolor, scolor, acolor;
     char str[3];
     int8_t minupdate = 0;
+    uint16_t bcolor;
     
     if (color == GREEN) color = GREY;   //色指定が緑だったら灰色に変更してしまう。？？？の時
     hcolor = color;  //時針の色
@@ -373,9 +379,7 @@ void DrawAnalogClock(uint8_t mode, uint8_t * datetime, uint16_t xx, uint16_t yy,
     if ((cax[1] == pax[1]) && (cay[1] == pay[1])) {
         //前と座標が変わっていない時は、消さない。最初の描画も同じ座標にしているので消去しない
     } else {
-        if (!FirstDraw) {
-            drawAlarmNeedle(pax, pay, BLACK);
-        }
+        drawAlarmNeedle(pax, pay, BLACK);   //元の秒針を消す
         //描画用の座標を保存
         for (jj=0; jj<2; jj++) {
             pax[jj] = cax[jj];
@@ -410,41 +414,38 @@ void DrawAnalogClock(uint8_t mode, uint8_t * datetime, uint16_t xx, uint16_t yy,
         cmy[4] = yc - rcm3 * cosd(angle)/256;
 
         //時針の座標計算
-        //以前の時刻と違っていた時だけ再計算
-        if (preDateTime[2] != datetime[2]) {
-            //　分のデータも取り込んで時針の角度決める
-            hh = hh % 12;
-            angle = hh * 30 + mm/2;   //角度に変換 8bit変数ではNG
-            
-            rch = rc1 *7/10;    //短針の長さは、70%
-            chx[0] = xc;  //中心座標
-            chy[0] = yc;
-            chx[1] = xc + rch * sind(angle)/256;
-            chy[1] = yc - rch * cosd(angle)/256;
-            
-            rch2 = SizeHour;       //時針の幅
-            chx[2] = xc + rch2 * sind(angle +90)/256;
-            chy[2] = yc - rch2 * cosd(angle +90)/256;
-            chx[3] = xc - (chx[2]-xc);
-            chy[3] = yc - (chy[2]-yc);
-            
-            //反対側の出っ張り
-            rch3 = 10;
-            chx[4] = xc + rch3 * sind(angle +180)/256;
-            chy[4] = yc - rch3 * cosd(angle +180)/256;
-            
-            //分が変更になったら。時間が変わる時は、分の変更と同時
-            display_fillTriangle(phx[1], phy[1], phx[2], phy[2], phx[3], phy[3], BLACK);
-            display_drawTriangle(phx[1], phy[1], phx[2], phy[2], phx[3], phy[3], BLACK);
-            display_fillTriangle(phx[4], phy[4], phx[2], phy[2], phx[3], phy[3], BLACK);
-            display_drawTriangle(phx[4], phy[4], phx[2], phy[2], phx[3], phy[3], BLACK);
-
-            //描画座標を保存
-            for (jj=0; jj<5; jj++) {
-                phx[jj] = chx[jj];
-                phy[jj] = chy[jj];
-            }
-
+        //分針が移動したら、時針も移動計算 (実際は2分毎)
+        //　分のデータも取り込んで時針の角度決める
+        hh = hh % 12;
+        angle = hh * 30 + mm/2;   //角度に変換 8bit変数ではNG
+        
+        rch = rc1 *7/10;    //短針の長さは、70%
+        chx[0] = xc;  //中心座標
+        chy[0] = yc;
+        chx[1] = xc + rch * sind(angle)/256;
+        chy[1] = yc - rch * cosd(angle)/256;
+        
+        rch2 = SizeHour;       //時針の幅
+        chx[2] = xc + rch2 * sind(angle +90)/256;
+        chy[2] = yc - rch2 * cosd(angle +90)/256;
+        chx[3] = xc - (chx[2]-xc);
+        chy[3] = yc - (chy[2]-yc);
+        
+        //反対側の出っ張り
+        rch3 = 10;
+        chx[4] = xc + rch3 * sind(angle +180)/256;
+        chy[4] = yc - rch3 * cosd(angle +180)/256;
+        
+        //分が変更になったら。時間が変わる時は、分の変更と同時
+        display_fillTriangle(phx[1], phy[1], phx[2], phy[2], phx[3], phy[3], BLACK);
+        display_drawTriangle(phx[1], phy[1], phx[2], phy[2], phx[3], phy[3], BLACK);
+        display_fillTriangle(phx[4], phy[4], phx[2], phy[2], phx[3], phy[3], BLACK);
+        display_drawTriangle(phx[4], phy[4], phx[2], phy[2], phx[3], phy[3], BLACK);
+        
+        //描画座標を保存
+        for (jj=0; jj<5; jj++) {
+            phx[jj] = chx[jj];
+            phy[jj] = chy[jj];
         }
 
         //分針の消去
@@ -463,6 +464,7 @@ void DrawAnalogClock(uint8_t mode, uint8_t * datetime, uint16_t xx, uint16_t yy,
     //最新の秒針の座標を計算
     ss = -1;
     if (preDateTime[0] != datetime[0]) {
+        preDateTime[0] = datetime[0];
         ss = ((datetime[0]>>4)*10 + (datetime[0] & 0x0f));  //0-59の数値
         rcs = rc1 - 4;  //秒針の長さは、これ
         angle = ss*6;
@@ -480,7 +482,6 @@ void DrawAnalogClock(uint8_t mode, uint8_t * datetime, uint16_t xx, uint16_t yy,
         csx[4] = xc + rcs2 * sind(angle-6)/256;
         csy[4] = yc - rcs2 * cosd(angle-6)/256;
         
-        preDateTime[0] = datetime[0];
         //秒針を消す
         display_drawLine(psx[1], psy[1], psx[2], psy[2], BLACK);
 //        display_fillTriangle(psx[0], psy[0], psx[3], psy[3], psx[4], psy[4], BLACK);
@@ -525,9 +526,18 @@ void DrawAnalogClock(uint8_t mode, uint8_t * datetime, uint16_t xx, uint16_t yy,
     }
     
     // AM/PMの表示
+    //ちらつきをなくすため、背景部分は変化させない描画を行うが、
+    if (preDateTime[2]/12 != datetime[2]/12) {
+        //AM/PMの切替時だけ、背景描画実施
+        bcolor = BLACK;
+        preDateTime[2] = datetime[2];
+    }
+    else {
+        bcolor = color;
+    }
     if (datetime[2] < 0x12) sprintf(str, "AM");
     else sprintf(str, "PM");
-    display_drawChars(xx-14, yy+rc/2, str, color, BLACK, 2);
+    display_drawChars(xx-14, yy+rc/2, str, color, bcolor, 2);
     
     //ここから、針の描画を実行
     //アラーム針描画------------------------------------------------------
@@ -564,7 +574,6 @@ void DrawAnalogClock(uint8_t mode, uint8_t * datetime, uint16_t xx, uint16_t yy,
     display_drawLine(psx[0], psy[0], psx[3], psy[3], scolor);
     display_drawLine(psx[0], psy[0], psx[4], psy[4], scolor);
     
-    FirstDraw = 0;
 }
 
 /*
@@ -665,9 +674,9 @@ void DrawBigCalendar(uint8_t year, uint8_t month, uint16_t xs, uint16_t ys) {
     uint8_t fontw, fonth, ypitch, space;
 
     //表示フォントの大きさ
-    fontw = Font.xsize * 2;    //16
+    fontw = CurrentFont.xsize * 2;    //16
     space = 4;
-    fonth = Font.ysize*2 +2;   //18;
+    fonth = CurrentFont.ysize*2 +2;   //18;
     ypitch = fonth+4;
     
     DrawCalendar(year, month, xs, ys, 0, ypitch, 2, fontw, fonth, space);
@@ -727,14 +736,14 @@ void Draw3month(uint8_t startyear, uint8_t startmonth, uint8_t mode) {
 }
 
 /*
- * SlideSWStatus: 0/1=Alarm off, 2/3=Alarm on
+ * sw=SlideSWStatus: 0/1=Alarm off, 2/3=Alarm on
  */
-void drawAlarmTime(uint8_t mode, uint8_t *alarmtime) {
+void drawAlarmTime(uint8_t mode, uint8_t *alarmtime, uint8_t sw) {
     char str[100];
     char ampm[][3] = {"AM", "PM"};
     int8_t ap;
     char pm;    //オンオフで+-切替
-    uint8_t idx = SlideSWStatus>>1;
+    uint8_t idx = sw>>1;
     
     //アラーム時刻の表示色は、AlarmColorで設定
     if (idx) pm = '+';
