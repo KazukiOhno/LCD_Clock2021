@@ -31,8 +31,8 @@
 // 絶対値を取得する関数マクロ定義
 #define ABS(x) ((x) < 0 ? -(x) : (x))
 
-COLOR FrontColor = {0xffff};  //RGB (5-6-5ビット)
-COLOR BackColor = {0x0000};
+uint16_t FrontColor = 0xffff;  //RGB (5-6-5ビット)
+uint16_t BackColor = 0x0000;
 
 int16_t
   Cursor_x = 0,          ///< x location to start print()ing text
@@ -64,13 +64,20 @@ void write_command(uint8_t cmd) {
     SPI1_ExchangeByte(data);
 }
 
+ //wordデータの書き込み
+ void write_wdata(uint16_t data) {
+    LCD_DCRS_SetHigh();  //データモード
+    SPI1_ExchangeByte(data >> 8);
+    SPI1_ExchangeByte(data & 0xff);
+}
+
 // RGB=5,6,5bit
 void glcd_SetFrontColor(uint16_t color) {
-    FrontColor.color16 = color;
+    FrontColor = color;
 }
 
 void glcd_SetBackColor(uint16_t color) {
-    BackColor.color16 = color;
+    BackColor = color;
 }
 
 /**************************************************************************
@@ -92,7 +99,7 @@ void display_setTextSize(uint8_t s) {
 }
 
 
-// データを書き込むエリアの指定
+// データを書き込むエリアの指定  描画範囲を設定
 // 4つの引数はすべて画面上の座標
 void addset(uint16_t x, uint16_t y, uint16_t xx, uint16_t yy) {
     
@@ -101,15 +108,11 @@ void addset(uint16_t x, uint16_t y, uint16_t xx, uint16_t yy) {
         LCD_CS_SetLow();    //CSをLowに
         
         write_command(0x2A);
-        write_data(x >> 8);
-        write_data(x & 0xff);
-        write_data(xx >> 8);
-        write_data(xx & 0xff);
+        write_wdata(x);
+        write_wdata(xx);
         write_command(0x2B);
-        write_data(y >> 8);
-        write_data(y & 0xff);
-        write_data(yy >> 8);
-        write_data(yy & 0xff);
+        write_wdata(y);
+        write_wdata(yy);
         write_command(0x2C);
  
         LCD_CS_SetHigh();    //CSをHighに
@@ -127,17 +130,19 @@ uint8_t lcd_set_cursor_x(uint16_t x) {
     if ( x >= LCD_WIDTH ) {
         return EXIT_FAILURE;
     }
-    uint8_t hi = x >>8;
-    uint8_t lo = x & 0xff;
+//    uint8_t hi = x >>8;
+//    uint8_t lo = x & 0xff;
 
     if (SPI1_Open(LCD8M_CONFIG)) {
         //ちゃんと開けたら
         LCD_CS_SetLow();    //CSをLowに
         write_command(0x2A);    //Column Address Set
-        write_data(hi);
-        write_data(lo);
-        write_data(hi);
-        write_data(lo);
+//        write_data(hi);
+//        write_data(lo);
+//        write_data(hi);
+//        write_data(lo);
+        write_wdata(x);
+        write_wdata(x);
         write_command(0x2C);
         LCD_CS_SetHigh();    //CSをHighに
         SPI1_Close();
@@ -154,17 +159,19 @@ uint8_t lcd_set_cursor_y(uint16_t y) {
     if( y >= LCD_HEIGHT ) {
         return EXIT_FAILURE;
     }
-    uint8_t hi = y >>8;
-    uint8_t lo = y & 0xff;
+//    uint8_t hi = y >>8;
+//    uint8_t lo = y & 0xff;
     
     if (SPI1_Open(LCD8M_CONFIG)) {
         //ちゃんと開けたら
         LCD_CS_SetLow();    //CSをLowに
         write_command(0x2B);    // Page Address Set
-        write_data(hi);
-        write_data(lo);
-        write_data(hi);
-        write_data(lo);
+//        write_data(hi);
+//        write_data(lo);
+//        write_data(hi);
+//        write_data(lo);
+        write_wdata(y);
+        write_wdata(y);
         write_command(0x2C);
         LCD_CS_SetHigh();    //CSをHighに
         SPI1_Close();
@@ -217,8 +224,7 @@ uint8_t draw_pixel(uint16_t color) {
     if (SPI1_Open(LCD8M_CONFIG)) {
         //ちゃんと開けたら
         LCD_CS_SetLow();    //CSをLowに
-        write_data(color >>8);
-        write_data(color & 0xff);
+        write_wdata(color);
         LCD_CS_SetHigh();    //CSをHighに
         SPI1_Close();
     }
@@ -242,8 +248,8 @@ void lcd_draw_pixel_at(uint16_t x, uint16_t y, uint16_t color) {
 void display_SetFont(const uint8_t *font) {
     CurrentFont.xsize = font[Fxsize];
     CurrentFont.ysize = font[Fysize];
-    CurrentFont.xpitch = CurrentFont.xsize;   //ピッチは、デフォルトでsizeと同じ
-    CurrentFont.ypitch = CurrentFont.ysize;
+    CurrentFont.xpitch = font[Fxpitch]; //CurrentFont.xsize;   //ピッチは、デフォルトでsizeと同じ
+    CurrentFont.ypitch = font[Fypitch]; //CurrentFont.ysize;
     CurrentFont.font = font;
     CurrentFont.offset = font[Foffset];    
 }
@@ -375,7 +381,8 @@ void display_drawChars(uint16_t x, uint16_t y, char *s, uint16_t color, uint16_t
 // 画面クリア
 void lcd_fill(uint16_t bg_color) {   
     uint16_t width = LCD_WIDTH, height = LCD_HEIGHT;
-    uint8_t hi = bg_color >> 8, lo = bg_color;
+    uint8_t hi = bg_color >> 8;
+    uint8_t lo = bg_color;
 
     addset(0, 0, width, height); //これで描画範囲を制限する
 
@@ -1433,26 +1440,35 @@ void glcd_init(void)
 
 }
 
-
 /*
+ * (x,y)を起点に、xx,yy幅の箱の領域にdataを書き込んでいく
+ */
 void glcd_array(uint16_t x, uint16_t y, uint16_t xx, uint16_t yy,uint8_t *data)
 {
     uint16_t a, b;
     b = 0;
 
     a = xx * yy * 2;
-    LCD_CS_SetLow();    //CSをLowに
     addset(x, y, x+xx-1, y+yy-1);
-    while(b<a){
-        write_data(data[b+1]);
-        write_data(data[b]);
-        b += 2;
+    if (SPI1_Open(LCD8M_CONFIG)) {
+        //ちゃんと開けたら
+        LCD_CS_SetLow();    //CSをLowに
+//        LCD_DCRS_SetHigh();  //データモード
+        while(b<a){
+            write_data(data[b+1]);
+            write_data(data[b]);
+//            SPI1_ExchangeByte(data[b+1]);
+//            SPI1_ExchangeByte(data[b]);
+            b += 2;
+        }
+        LCD_CS_SetHigh();    //CSをHighに
+        SPI1_Close();
     }
-    LCD_CS_SetHigh();    //CSをHighに
     
 }
 
 
+/*
 void glcd_all_p(uint8_t *data)
 {
     unsigned long i;

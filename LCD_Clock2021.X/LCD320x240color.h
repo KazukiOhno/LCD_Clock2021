@@ -64,29 +64,14 @@ extern "C" {
  * この方法は却下とする　　2020/11/21
  */
     
-typedef union {
-    uint16_t color16;
-    struct {
-        uint8_t lo;
-        uint8_t hi;
-    };
-} COLOR;
-
+//
 FontStruct CurrentFont = {
   8,8,      //8x8 dot, normal font
-  8,8,      //8x8 dot pitch
+  8,10,      //8x8 dot pitch
   NormalFont,      //ノーマルフォント
   0x20      //最初の文字コード
 };
 
-
-//SPI共有化させるため、使用時を明確化
-/*
- * 最基底のwrite_commandとwrite_dataの所でOpen/Closeをやるのは効率悪そう
- * その上のレベルで処理することを基本としたい。
- * addset, lcd_set_cursor_x, y, draw_pixel, lcd_fill, 
- * drawHLine, drawVLine, lcd_fill_rect, glcd_init
- */
 
 //内部専用は、lcd_とかのヘッダなし　　CSの設定をしないと動作しない
 //void glcd_SetFrontColor(uint16_t color);
@@ -100,19 +85,19 @@ FontStruct CurrentFont = {
 // * @param y
 // */
 //uint8_t lcd_set_cursor_y(uint16_t y);
-//
-///**
-// * Set the cursor at position (x,y)
-// * @param x X-Position [0..319] depend on LCD_WIDTH
-// * @param y Y-Position [0..239] depend on LCD_HEIGHT
-// */
-//uint8_t lcd_set_cursor(uint16_t x, uint16_t y);
+
+/**
+ * Set the cursor at position (x,y)
+ * @param x X-Position [0..319] depend on LCD_WIDTH
+ * @param y Y-Position [0..239] depend on LCD_HEIGHT
+ */
+uint8_t lcd_set_cursor(uint16_t x, uint16_t y);
 //
 ///**
 // * Draw a Pixel at the current position
 // * @param color The foreground color of the pixel
 // */
-////uint8_t draw_pixel(uint16_t color);
+uint8_t draw_pixel(uint16_t color);
 
 ////void glcd_chr(uint16_t x, uint16_t y, char moji);
 ////void glcd_chr_color(uint16_t x, uint16_t y, char moji, uint16_t fg_color, uint16_t bg_color);
@@ -171,7 +156,7 @@ void display_fillCircle(uint16_t x0, uint16_t y0, uint16_t r, uint16_t color);
  * @param y Y-Coordinate
  * @param color Foreground color of the Pixel
  */
-//void lcd_draw_pixel_at(uint16_t x, uint16_t y, uint16_t color);
+void lcd_draw_pixel_at(uint16_t x, uint16_t y, uint16_t color);
 
 /**
  * This function fill the hole TFT with a user defined Color.
@@ -214,14 +199,15 @@ void display_drawRoundRect(uint16_t x0, uint16_t y0, uint16_t w, uint16_t h, uin
 //void display_fillRoundRect(uint16_t x0, uint16_t y0, uint16_t w, uint16_t h, uint16_t radius, uint16_t color);
 //
 
-//void display_setCursor(uint16_t x, uint16_t y);
+void display_setCursor(uint16_t x, uint16_t y);
 //void display_setTextColor(uint16_t c, uint16_t bg);
 //void display_setTextSize(uint8_t s);
 ////void display_setTextWrap(bool w);
 ////void display_printf(const char *fmt, ...);
 void display_SetFont(const uint8_t *font);
-//void display_SetFontPitch(uint8_t xp, uint8_t yp);
+void display_SetFontPitch(uint8_t xp, uint8_t yp);
 
+void glcd_array(uint16_t x, uint16_t y, uint16_t xx, uint16_t yy,uint8_t *data);
 
 
 #ifdef	__cplusplus

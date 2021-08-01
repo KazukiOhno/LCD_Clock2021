@@ -103,7 +103,7 @@
  * GPSv21: サポートルーチンの定義を整理(何をGlobal変数にして、どの関数を共用化するか)
  * GPSv22: ボタンオブジェクトの定義を使いやすいように再定義
  * GPS4: SDカード書き込み時の問題解消。LCDをSleep_Outさせて解決
- * LCD_Clock2021に名称変更: GitHubにupload。
+ * LCD_Clock2021に名称変更: GitHubにupload。このファイルはそのclone
  * 
  */
      
@@ -123,27 +123,9 @@
 
 const char HEX[] = "0123456789ABCDEF";
 
-// 上位4ビットでモード、下位4ビットでそのモードの中で使う項目など
-#define NormalInit       0x00
-#define Normal           0x01
-#define Setting          0x10
-#define SettingYear      0x11
-#define SettingMonth     0x12
-#define SettingDay       0x13
-#define SettingTime      0x14
-#define SettingCancel    0x15
-#define SettingOK        0x16
-#define SettingAlarmTime 0x17
-uint8_t Mode;
-
-
-#define AdjustTouch      0x20
-
+uint8_t Mode;   //動作状態を示す
 //表示モード
-//#define DisplayMode1    0x00    //時計表示大きく、3か月カレンダー表示
-//#define DisplayMode2    0x01    //カレンダー大きい表示
-//#define DisplayMode3    0x02    //アナログ表示
-uint8_t DisplayMode;    // = DisplayMode1;
+uint8_t DisplayMode;    // 表示用モード
 
 uint8_t UpdateFlag = 0;
 #define UpdateTime          0x01
@@ -154,11 +136,12 @@ uint8_t UpdateFlag = 0;
 #define UpdateDate          0x20
 #define UpdateMsg           0x80
 
-//アラーム時刻、mm,hh, アラームが有効な曜日　RTCと同じ順序
-uint8_t TmpTime[7]; //設定途中の時刻を保持
+#define AdjustTouch      0x20
 
+//アラーム時刻、mm,hh, アラームが有効な曜日　RTCと同じ順序
 uint8_t AlarmTime[3] = {0, 0, 0x7f};    //mm, hh, wday
 uint8_t SmoothAlarmTime[3] = {0, 0, 0x7f};
+uint8_t TmpTime[7]; //設定途中の時刻を保持
 
 //温湿度センサ
 int16_t Temp, Humidity;
@@ -212,6 +195,9 @@ char * BufferP;     //バッファのデータ位置を示すポインタ
 uint8_t SDcardStatus = 0;
 FATFS drive;
 FIL file;
+
+//プロトタイプ宣言
+void OpeningScreen(uint8_t waitTouch);
 
 /*
  * 10ms毎に割り込み
@@ -458,8 +444,8 @@ void NormalProc() {
             Brightness = Brightness/8*7 + ADC_GetConversion(PhotoDiode);
             // Dutyを変更してバックライトの明るさを変更
             // Brightnessが一定数以上の時は、バックライトはほぼ常時点灯。
-            BackLight = Brightness/8*3;
-            // BackLightは、最低0-max999
+            BackLight = Brightness/8*3 + 10;
+            // BackLightは、最低10-max999   0だと全く画面見えなくなるので、やめる
             if (BackLight >= 1000) BackLight = 999;
 
 #ifdef DEBUG            
@@ -472,23 +458,25 @@ void NormalProc() {
             EPWM1_LoadDutyValue(BackLight);
         }
 
+//#ifdef SDLOGWRITE
         // SDカードに温湿度を毎分記録
         if (DateTime[0] == 5) {
             //毎回、Mountすると、途中でSDカード抜き差ししても大丈夫なので、これで行く
             if (f_mount(&drive,"0:",1) == FR_OK) {
                 if (f_open(&file, "TempLog.TXT", FA_WRITE | FA_OPEN_APPEND ) == FR_OK) { //Open or Create 追記
-//                    f_lseek(&file, 0);
-//                    f_read(&file, str, 80, &actualLength);
-//                    str[actualLength] = '\0';
-//                    display_drawChars(0, 180, str, WHITE, BLACK, 1);
                     //日付時刻と気温を記録
                     sprintf(str, "%x/%x/%x %02x:%02x %d\r\n", DateTime[6], DateTime[5], DateTime[4], DateTime[2], DateTime[1], Temp);
                     f_write(&file, str, strlen(str), &actualLength);
                     f_close(&file);
                 }
                 f_mount(0,"0:",0);  //unmount disk
+            } else {
+                //オープンできなかった旨メッセージ出す
+                sprintf(str, "No SD card");
+                display_drawChars(15, 230, str, GREY, BLACK, 1);
             }
         }
+//#endif
     }
     
     //タッチされた時の処理
@@ -597,7 +585,7 @@ void NormalProc() {
     
     if (UpdateFlag & UpdateDate) {
         //カレンダーを更新
-        drawCalendar(DisplayMode);
+        DrawCalendar(DisplayMode);
         UpdateFlag &= ~UpdateDate; //UpdateDateをクリア
 
         //日付が変わったら、再度GPS受信
@@ -614,70 +602,186 @@ void NormalProc() {
 
 
 /*
+ * 設定用画面描画
  * 枠で囲むことを考えたが、意外と面倒
  * 素直に対象の文字色を変更するだけにした。点滅とかの方が良いかもしれない
+ * 
+ * settingMode = SettingYear, SettingMonth, SettingDay, SettingTime
  */
-void DrawSetBox(uint8_t mode) {
+void DrawSetBox(uint8_t settingMode) {
     char str[100];
     uint16_t color;
+    uint8_t jj;
 
-    if (mode == SettingTime) {
+    //いったん普通の色で表示する
+    drawDate(DispSetting, TmpTime);
+
+    if (settingMode == SettingTime) {
         //設定している箇所の色を変える
         color = RED;
     } else {
         color = GREEN;
     }
-    drawTime(DisplayMode, TmpTime, color);
+    drawTime(DispSetting, TmpTime, color);
 
-    //いったん普通の色で表示する
-//    sprintf(str, "20%02x/%02x/%02x(%s)", TmpTime[6], TmpTime[5], TmpTime[4], WeekDays[TmpTime[3]]);
-    sprintf(str, "20%02x/%02x/%02x(%c)", TmpTime[6], TmpTime[5], TmpTime[4], 0x80+TmpTime[3]);
-    display_drawChars(RDate[DisplayMode].x, RDate[DisplayMode].y, str, WHITE, BLACK, RDate[DisplayMode].font);
-
-    if (mode == SettingYear) {
+    if (settingMode == SettingYear) {
         sprintf(str, "20%02x", TmpTime[6]);
-        display_drawChars(RYear[DisplayMode].x, RYear[DisplayMode].y, str, RED, BLACK, RDate[DisplayMode].font);
+        display_drawChars(ButtonObj3[BtnYear].x, ButtonObj3[BtnYear].y, str, RED, BLACK, 2);
     }
-    else if (mode == SettingMonth) {
+    else if (settingMode == SettingMonth) {
         sprintf(str, "%02x", TmpTime[5]);
-        display_drawChars(RMonth[DisplayMode].x, RMonth[DisplayMode].y, str, RED, BLACK, RDate[DisplayMode].font);
+        display_drawChars(ButtonObj3[BtnMonth].x, ButtonObj3[BtnMonth].y, str, RED, BLACK, 2);
     } 
-    else if (mode ==SettingDay) {
+    else if (settingMode ==SettingDay) {
         sprintf(str, "%02x", TmpTime[4]);
-        display_drawChars(RDay[DisplayMode].x, RDay[DisplayMode].y, str, RED, BLACK, RDate[DisplayMode].font);
+        display_drawChars(ButtonObj3[BtnDay].x, ButtonObj3[BtnDay].y, str, RED, BLACK, 2);
     }
+    
+    //タッチでも変更できるように、三角ボタンを描画　全部で8つ
+    uint16_t y1, y2;
+    uint16_t xx[3];
+    //アップ側
+    xx[0] = ButtonObj3[BtnYearUp].x + 30;
+    xx[1] = ButtonObj3[BtnMonthUp].x + 15;
+    xx[2] = ButtonObj3[BtnDayUp].x + 15;
+
+    y1 = ButtonObj3[BtnYearUp].y + 7;
+    y2 = y1 + ButtonObj3[BtnYearUp].yw - 10;
+    
+    for (jj=0; jj<3; jj++) {
+        display_fillTriangle(xx[jj], y1, xx[jj]-15, y2, xx[jj]+15, y2, GREY);
+        display_drawTriangle(xx[jj], y1, xx[jj]-15, y2, xx[jj]+15, y2, WHITE);
+    }
+
+    //down側
+    y2 = ButtonObj3[BtnYearDown].y + 3;
+    y1 = y2 + ButtonObj3[BtnYearDown].yw - 10;
+    for (jj=0; jj<3; jj++) {
+        display_fillTriangle(xx[jj], y1, xx[jj]-15, y2, xx[jj]+15, y2, GREY);
+        display_drawTriangle(xx[jj], y1, xx[jj]-15, y2, xx[jj]+15, y2, WHITE);
+    }
+    
+    //時刻用
+    xx[0] = ButtonObj3[BtnTimeUp].x + ButtonObj3[BtnTimeUp].xw/2;
+    y1 = ButtonObj3[BtnTimeUp].y + 5;
+    y2 = y1 + ButtonObj3[BtnTimeUp].yw - 10;
+    display_fillTriangle(xx[0], y1, xx[0]-40, y2, xx[0]+40, y2, GREY);
+    display_drawTriangle(xx[0], y1, xx[0]-40, y2, xx[0]+40, y2, WHITE);
+
+    y2 = ButtonObj3[BtnTimeDown].y;
+    y1 = y2 + ButtonObj3[BtnTimeDown].yw - 10;
+    display_fillTriangle(xx[0], y1, xx[0]-40, y2, xx[0]+40, y2, GREY);
+    display_drawTriangle(xx[0], y1, xx[0]-40, y2, xx[0]+40, y2, WHITE);
+
     AlarmSoundOff();
 }
 
+void YMDclac(uint8_t mode, int8_t delta) {
+    int8_t yy, mo, dd;
+    uint8_t y, m, d;
+
+    yy = Bcd2Hex(TmpTime[6]);
+    mo = Bcd2Hex(TmpTime[5]);
+    dd = Bcd2Hex(TmpTime[4]);
+            
+    if (mode == SettingYear) {
+        yy = (yy + delta -1 + 99) % 99 +1;  // 1-99年まで
+    } else if (mode == SettingMonth) {
+        mo = (mo + delta -1 + 12) % 12 +1;
+    } else if (mode == SettingDay) {
+        dd = (dd + delta -1 + 31) % 31 +1;
+    }
+    //曜日を計算
+    y = yy;
+    m = mo;
+    d = dd;
+    TmpTime[3] = getWeekdays(&y, &m, &d);
+    TmpTime[6] = Hex2Bcd(y);
+    TmpTime[5] = Hex2Bcd(m);
+    TmpTime[4] = Hex2Bcd(d);
+}
+
+void Timecalc(uint8_t mode, int8_t delta) {
+   int8_t mm, hh;
+   
+   mm = (int8_t)Bcd2Hex(TmpTime[1]);
+   hh = (int8_t)Bcd2Hex(TmpTime[2]);
+   IncDecTime(delta, &hh, &mm);
+   TmpTime[1] = Hex2Bcd(mm);
+   TmpTime[2] = Hex2Bcd(hh);
+}
+
 const char ButtonName[][8] = {
-    "Y", "M", "D", "T", "Cancel", "OK", 
+    "Cancel", "OK", "About", 
 };
 
 /*
- * タッチした座標をもらって、処理を進める
+ * タッチした座標をもらって、どのボタンが押されたか判定する
  */
-uint8_t ButtonCheck(uint16_t x, uint16_t y) {
+void ButtonCheck(uint16_t x, uint16_t y, uint8_t changeTime) {
     uint8_t jj, kk;
-    uint8_t mode;
 
-    //どのボタンが押されたかチェック    
-    for (jj = 0; jj< 6; jj++) {
-        if (ButtonPush(Test_x, Test_y, jj)) {
-            //以下の順序で定義してあることを前提にプログラム
-            //#define SettingYear      0x11
-            //#define SettingMonth     0x12
-            //#define SettingDay       0x13
-            //#define SettingTime      0x14
-            //#define SettingCancel    0x15
-            //#define SettingOK        0x16
-            mode = SettingYear + jj;
-            resetPreDateTime();
-            DrawSetBox(mode);
-            break;
-        }
+    //どのボタンが押されたかチェック
+    if (ButtonPush(x, y, BtnYearUp)) {
+        YMDclac(SettingYear, 1);
+    } else if (ButtonPush(x, y, BtnYearDown)) {
+        YMDclac(SettingYear, -1);
+    } else if (ButtonPush(x, y, BtnMonthUp)) {
+        YMDclac(SettingMonth, 1);
+    } else if (ButtonPush(x, y, BtnMonthDown)) {
+        YMDclac(SettingMonth, -1);
+    } else if (ButtonPush(x, y, BtnDayUp)) {
+        YMDclac(SettingDay, 1);
+    } else if (ButtonPush(x, y, BtnDayDown)) {
+        YMDclac(SettingDay, -1);
+    } else if (ButtonPush(x, y, BtnTimeUp)) {
+        Timecalc(Mode, +1);
+        //リピート利くよう
+        TouchStatus = 2;
+        TouchCount = 0;
+    } else if (ButtonPush(x, y, BtnTimeDown)) {
+        Timecalc(Mode, -1);
+        //リピート利くよう
+        TouchStatus = 2;
+        TouchCount = 0;
+    } else if (ButtonPush(x, y, BtnCancel)) {
+        Mode = NormalInit;
+    } else if (ButtonPush(x, y, BtnOK)) {
+        for (jj = 0; jj < 7; jj++) DateTime[jj] = TmpTime[jj];
+        DateTime[0] = 0x00;     //秒は00とする
+        if (changeTime) RTC_setTime(DateTime);  //時刻変更時のみ
+        RTC_setDate(DateTime);
+        //日付を変更したら、EEPROMに書き込む
+        WriteYMD();
+        Mode = NormalInit;
+    } else if (ButtonPush(x, y, BtnYear)) {
+        //ロータリーの対象を選択(赤くする)
+        Mode = SettingYear;
+        resetPreDateTime();
+        DrawSetBox(Mode);
+    } else if (ButtonPush(x, y, BtnMonth)) {
+        Mode = SettingMonth;
+        resetPreDateTime();
+        DrawSetBox(Mode);
+        
+    } else if (ButtonPush(x, y, BtnDay)) {
+        Mode = SettingDay;
+        resetPreDateTime();
+        DrawSetBox(Mode);
+        
+    } else if (ButtonPush(x, y, BtnTime)) {
+        Mode = SettingTime;
+        resetPreDateTime();
+        DrawSetBox(Mode);
+        
+    } else if (ButtonPush(x, y, BtnAbout)) {
+        OpeningScreen(1);
+        Mode = Setting;
+    } else {
+        return;
     }
-    
-    return mode;
+    DrawSetBox(Mode);
+
 }
         
 /*
@@ -696,35 +800,23 @@ void SettingProc() {
         //このモードに移行した時に初期化する
         lcd_fill(BLACK); //画面をクリア(黒)
         
-        //ボタンの位置座標をモードに合わせて変更
-        ButtonObj3[BtnYear] = RYear[DisplayMode];
-        ButtonObj3[BtnMonth] = RMonth[DisplayMode];
-        ButtonObj3[BtnDay] = RDay[DisplayMode];
-        ButtonObj3[BtnTime] = RTime[DisplayMode];
-        //アナログ時計のボックスの座標を調整
-        if (DisplayMode == DisplayMode3) {
-            ButtonObj3[BtnTime].x = AnalogClockX - AnalogClockR;
-            ButtonObj3[BtnTime].y = AnalogClockY - AnalogClockR;
-            ButtonObj3[BtnTime].xw = AnalogClockR *2;
-            ButtonObj3[BtnTime].yw = AnalogClockR *2;
-        }
-        
         Mode = SettingTime;
+        //設定用にテンポラリデータを現時刻からコピー
         for (jj = 0; jj < 7; jj++) TmpTime[jj] = DateTime[jj];
         changeTime = 0;
         resetPreDateTime();        //こうしておかないと描画されない
         //画面書き換え
         DrawSetBox(Mode);
 
-        //ボタン描画  CancelとOK
-        for (jj=BtnCancel; jj<=BtnOK; jj++) {
+        //ボタン描画  Cancel, OK, About
+        for (jj=BtnCancel; jj<=BtnAbout; jj++) {
             display_drawRoundRect(ButtonObj3[jj].x, ButtonObj3[jj].y, ButtonObj3[jj].xw, ButtonObj3[jj].yw, 10, WHITE);
             //ボタンの中央にテキスト表示
-            uint16_t xp = ButtonObj3[jj].x + ButtonObj3[jj].xw/2 - strlen(ButtonName[jj])*4*(jj-3);
-            uint16_t yp = ButtonObj3[jj].y + ButtonObj3[jj].yw/2 - 4*(jj-3);
-            display_drawChars(xp, yp, (char *) ButtonName[jj], WHITE, BLACK, jj-3);
+            uint16_t xp = ButtonObj3[jj].x + ButtonObj3[jj].xw/2 - strlen(ButtonName[jj - BtnCancel])*4;
+            uint16_t yp = ButtonObj3[jj].y + ButtonObj3[jj].yw/2 - 4;
+            display_drawChars(xp, yp, (char *) ButtonName[jj - BtnCancel], WHITE, BLACK, 0x12);
         }
-        
+        return;
     }
 
     //タッチした時の処理
@@ -740,24 +832,8 @@ void SettingProc() {
 #endif
 
         //タッチした場所にボタンがあるかチェックして、処理を実行
-        Mode = ButtonCheck(Test_x, Test_y);
+        ButtonCheck(Test_x, Test_y, changeTime);
 
-        switch (Mode) {
-            case SettingCancel:
-                Mode = NormalInit;
-                return;
-
-            case SettingOK:
-                for (jj = 0; jj < 7; jj++) DateTime[jj] = TmpTime[jj];
-                DateTime[0] = 0x00;     //秒は00とする
-                if (changeTime) RTC_setTime(DateTime);  //時刻変更時のみ
-                RTC_setDate(DateTime);
-                //日付を変更したら、EEPROMに書き込む
-                WriteYMD();
-                Mode = NormalInit;
-                break;
-        }
-        
     } else if (TouchStatus == 5) {
         TouchStatus++;
         //タッチ長押し
@@ -788,36 +864,13 @@ void SettingProc() {
         else Accel = 1;
 
         if (Mode == SettingTime) {
-            mm = (int8_t)Bcd2Hex(TmpTime[1]);
-            hh = (int8_t)Bcd2Hex(TmpTime[2]);
-            IncDecTime(delta, &hh, &mm);
-            TmpTime[1] = Hex2Bcd(mm);
-            TmpTime[2] = Hex2Bcd(hh);
+            Timecalc(Mode, delta);
+            drawTime(DispSetting, TmpTime, RED);
 
-            drawTime(DisplayMode, TmpTime, RED);
             changeTime = 1; //時刻を変更したら1
         } else if (Mode >= SettingYear && Mode <= SettingDay) {
-            yy = Bcd2Hex(TmpTime[6]);
-            mo = Bcd2Hex(TmpTime[5]);
-            dd = Bcd2Hex(TmpTime[4]);
-            
-            if (Mode == SettingYear) {
-                yy = (yy + delta -1 + 99) % 99 +1;  // 1-99年まで
-            } else if (Mode == SettingMonth) {
-                mo = (mo + delta -1 + 12) % 12 +1;
-            } else if (Mode == SettingDay) {
-                dd = (dd + delta -1 + 31) % 31 +1;
-            }
-            //曜日を計算
-            y = yy;
-            m = mo;
-            d = dd;
-            TmpTime[3] = getWeekdays(&y, &m, &d);
-            TmpTime[6] = Hex2Bcd(y);
-            TmpTime[5] = Hex2Bcd(m);
-            TmpTime[4] = Hex2Bcd(d);
+            YMDclac(Mode, delta);
             DrawSetBox(Mode);
-
         }
 
     }
@@ -1076,6 +1129,132 @@ void TouchAdjust(void) {
     
 }
 
+/*
+ * 16bit RGB=565のbmpファイルを読み込み表示する
+ * 
+ * 0x0000　(2)	bfType		ファイルタイプ　通常は'BM'
+ * 0x0002　(4)	bfSize		ファイルサイズ (byte)
+ * 0x0006　(2)	bfReserved1	予約領域　常に 0
+ * 0x0008　(2)	bfReserved2	予約領域　常に 0
+ * 0x000A　(4)	bfOffBits	ファイル先頭から画像データまでのオフセット (byte)
+ * 0x000E　(4)	bcSize		ヘッダサイズ
+ * 0x0012　(4)	bcWidth		画像の幅 (ピクセル)
+ * 0x0016　(4)	bcHeight	画像の高さ (ピクセル) 正数なら，画像データは下から上へ
+ *                                               負数なら，画像データは上から下へ
+ * 0x001A　(2)	bcPlanes	プレーン数　常に 1
+ * 0x001C　(2)	bcBitCount	1画素あたりのデータサイズ (bit)
+ * 
+ * ここでは、16bitカラーと決め打ちしている
+ */
+#define DATASIZE 320
+uint16_t data[DATASIZE];    //ローカルでは入りきらなくても、Data spaceにはまだ入った
+uint8_t ReadBmp16() {
+    uint16_t x, y, jj, kk, ll;
+    UINT actualLength;
+    char str[100];
+    uint8_t error = 0;
+    
+    if (f_mount(&drive,"0:",1) == FR_OK) {
+        //ファイル名は8文字までサポート
+        if (f_open(&file, "Open4.bmp", FA_READ ) == FR_OK) { //Open
+            //ヘッダ読込
+            f_read(&file, data, 32, &actualLength); //32バイト分読み込む
+            x = data[0x12>>1];
+            y = data[0x16>>1];
+//            f_lseek(&file, data[0x0a>>1]); //データ先頭までシーク
+            //シークの代わりにダミーリード
+            for (jj=0; jj<(data[0x0a>>1]-32)/2; jj++) f_read(&file, data, 2, &actualLength);
+            
+            //bmpデータは、下の行から始まる
+            for (kk=0; kk<y; kk++) {
+                for (jj=0; jj<x/DATASIZE; jj++) {
+                    f_read(&file, data, DATASIZE*2, &actualLength); //128バイト=64ワード=64ドット
+//                    for (ll=0; ll<DATASIZE; ll++) lcd_draw_pixel_at(jj*DATASIZE+ll, 239-kk, data[ll]);
+                    glcd_array(jj*DATASIZE, 239-kk, DATASIZE, 1, data);
+                }
+            }
+            f_close(&file);
+        } else {
+            error = 1;
+        }
+        f_mount(0,"0:",0);  //unmount disk
+    }
+    else error = 1;
+    
+    return error;
+    
+}
+
+void OpeningScreen(uint8_t waitTouch) {
+    char str[100];
+    int8_t jj;
+    uint16_t x, y, w, h;
+    //カラーバーと同じく、75%の白、黄、シアン、緑、マゼンタ、赤、青
+    uint16_t color[] = {
+        0xBDF7, //白
+        0xBDE0, //黄
+        0x05F7, //シアン
+        0x05E0, //緑
+        0xB817, //マゼンタ
+        0xB800, //赤
+        0x0017, //青
+    };
+
+    lcd_fill(BLACK); //画面をクリア(真っ黒)
+    
+    sprintf(str, "LCD Clock 2021 v1.0");
+    y = 0;
+    display_drawChars(0, y, str, WHITE, BLACK, 2);
+    
+    display_setCursor(0, 30);
+    display_SetFontPitch(7, 10);
+    sprintf(str, "PIC: 18F26K22 64KB\r\n");
+    //        y += 30;
+    display_puts(str);
+    
+    sprintf(str, "LCD: 2.8inch 320x240dot, 16bit color+Touch\r\n");
+    display_puts(str);
+    
+    sprintf(str, "RTC: RX-8025NB\r\n");
+    display_puts(str);
+    
+    sprintf(str, "Temp and Humidity Sensor: AM2320\r\n");
+    display_puts(str);
+    
+    sprintf(str, "GPS unit: GYSFDMAXB\r\n");
+    display_puts(str);
+    display_SetFontPitch(8, 8);
+
+    sprintf(str, "\nAccessing SD card...");
+    display_puts(str);
+
+    if (ReadBmp16()) {
+        //    for (jj=0; jj<10; jj++) __delay_ms(1000);
+    }    
+    //カラーバー表示
+    x = 0;
+    y = 200;
+    w = 40;
+    h = 20;
+    for (jj=0; jj<7; jj++) {
+        fillRect(x, y, w, h, color[jj]);
+        x += w;
+    }
+
+    if (waitTouch==1) {
+        sprintf(str, "Touch anywhere on the screen");
+        display_drawChars(20, 221, str, WHITE, BLACK, 0x12);
+        while (TouchStatus!=2);
+    }
+    else {    
+        for (jj=0; jj<4; jj++) {
+            __delay_ms(500);
+        }
+    }
+    lcd_fill(BLACK); //画面をクリア(真っ黒)
+
+}
+    
 
 /*
                          Main application
@@ -1132,15 +1311,17 @@ void main(void) {
     
     //LCDの初期化
     glcd_init();
-    lcd_fill(BLACK); //画面をクリア(真っ黒)
 
+    OpeningScreen(0);
+    
     //起動音
     AlarmSoundOn(0);
     __delay_ms(100);
     AlarmSoundOff();
     __delay_ms(200);
     AlarmSoundOn(0);
-    __delay_ms(300);
+    __delay_ms(200);    //あまり大きい数だと適切などうさしない
+//    __delay_ms(200);
     AlarmSoundOff();
     
     display_SetFont(NormalFont);  //初期フォント設定

@@ -2107,7 +2107,7 @@
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="FatFs" name="FF_FS_MINIMIZE"/>
-         <value>2</value>
+         <value>3</value>
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="FatFs" name="FF_FS_NORTC"/>
@@ -4658,7 +4658,7 @@
          <value>PDIP28</value>
       </entry>
       <entry>
-         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="Pin Module" name="straPin%aux1"/>
+         <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="Pin Module" name="straPin%aux0"/>
          <value>PORTB3</value>
       </entry>
       <entry>
@@ -5899,11 +5899,11 @@
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="SPIMASTER" name="pubSubSPIMASTERConfigurations"/>
-         <value>5665.665838007566</value>
+         <value>7037.351083971969</value>
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="SPIMASTER" name="pubSubspiSubscriber"/>
-         <value>4311.620152471024</value>
+         <value>1000.6465944897348</value>
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="SPIMASTER" name="spiSubscriber"/>
@@ -5915,7 +5915,7 @@
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="SPIMASTER" name="validate"/>
-         <value>0.0810335520847314</value>
+         <value>0.9067696129187969</value>
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.PropertyTokenKey" moduleName="SPIMASTER" name="spiConfigurations%0%dataInputSample"/>
@@ -8181,7 +8181,7 @@
       </entry>
       <entry>
          <file>mcc_generated_files\fatfs\ffconf.h</file>
-         <hash>5808f0e5eb5fad16c60d68c7b9b33ecf6987fe38c657a3f4b153e4c38f996cd6</hash>
+         <hash>f8b6af90f5eb8a0b7b2523e330eb5bf9a821a41aa457e2c5d159b37d6b82c7f3</hash>
       </entry>
       <entry>
          <file>mcc_generated_files\device_config.c</file>
@@ -8312,12 +8312,12 @@
          <hash>3c89b2ace22f4345b34113a864fe52e4c9be6adece42c64408a887084e6ab3c8</hash>
       </entry>
       <entry>
-         <file>mcc_generated_files\tmr0.c</file>
-         <hash>c5913a5bc1b2e93b5cf61624c874402de3547e4f98a13e855a673125216bdf96</hash>
-      </entry>
-      <entry>
          <file>mcc_generated_files\epwm1.h</file>
          <hash>ff7bd77bd28c7af404341f38aeae7a495fd455426b61ae9070cf915e2bd22405</hash>
+      </entry>
+      <entry>
+         <file>mcc_generated_files\tmr0.c</file>
+         <hash>c5913a5bc1b2e93b5cf61624c874402de3547e4f98a13e855a673125216bdf96</hash>
       </entry>
       <entry>
          <file>mcc_generated_files\examples\i2c2_master_example.h</file>
